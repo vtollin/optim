@@ -10,7 +10,7 @@
 *.out
 
 # === CMake build system files ===
-CMakeCache.txt
+CMakeLists.txt
 cmake_install.cmake
 Makefile
 
