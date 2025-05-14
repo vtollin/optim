@@ -31,5 +31,5 @@ Makefile
 *.sublime-project
 
 # === OS-specific files ===
-.DS_Store  # macOS
-Thumbs.db  # Windows
+.DS_Store  
+Thumbs.db  
