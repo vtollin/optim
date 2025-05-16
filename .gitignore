@@ -32,3 +32,4 @@ Makefile
 # === OS-specific files ===
 .DS_Store  
 Thumbs.db  
+.clang-format

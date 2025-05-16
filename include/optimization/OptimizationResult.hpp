@@ -3,9 +3,9 @@
 #include <string>
 
 struct OptimizationResult {
-    Eigen::VectorXd xOpt;
-    double fVal;
+    Eigen::VectorXd x_opt;
+    double f_val;
     int iterations;
     bool converged;
-    std::string message; 
+    std::string message;
 };
