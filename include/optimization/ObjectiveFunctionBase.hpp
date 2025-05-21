@@ -7,5 +7,6 @@ class ObjectiveFunctionBase {
 
     virtual double evaluate(const Eigen::VectorXd &x) const = 0;
     virtual Eigen::VectorXd gradient(const Eigen::VectorXd &x) const = 0;
+    virtual Eigen::MatrixXd hessian(const Eigen::VectorXd &x) const = 0;
     virtual int sourceDimension() const = 0;
 };
