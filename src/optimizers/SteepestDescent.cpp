@@ -21,7 +21,7 @@ OptimizationResult SteepestDescent::optimize(const ObjectiveFunctionBase &f,
     int k = 0;
     bool converged = false;
     Eigen::VectorXd x = x0;
-    std::string msg = "Failed to converge";
+    std::string msg = "Failed to converge in specified iterations.";
 
     if (f.sourceDimension() != x.size()) {
         throw std::invalid_argument("Initial vector is not in the source of objective function.");
