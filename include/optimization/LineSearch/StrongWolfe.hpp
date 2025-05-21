@@ -13,6 +13,7 @@ struct WolfeConfig {
     int max_iters = 20;
     double c1 = 1e-4;
     double c2 = 0.9;
+    bool isVerbose = false;
 };
 
 class StrongWolfe : public SearchStrategyBase {

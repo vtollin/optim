@@ -15,6 +15,7 @@ struct ArmijoConfig {
     double rho = 0.5;
     int max_iters = 20;
     double c = 1e-4;
+    bool isVerbose = false;
 };
 
 class ArmijoBacktracking : public SearchStrategyBase {
