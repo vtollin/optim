@@ -59,8 +59,10 @@ Eigen::VectorXd StrongWolfe::computeStep(const ObjectiveFunctionBase &f, const E
         }
         alpha_next = alpha * config_.rho; // compute next step
         if (alpha_next > config_.alpha_max) {
-            std::cerr
-                << "[StrongWolfe] Warning: Alpha exceeded alpha_max: returning best step found.\n";
+            if (config_.isVerbose) {
+                std::cerr << "[StrongWolfe] Warning: Alpha exceeded alpha_max: returning best step "
+                             "found.\n";
+            }
             break;
         }
         alpha_prev = alpha;
@@ -74,8 +76,11 @@ Eigen::VectorXd StrongWolfe::computeStep(const ObjectiveFunctionBase &f, const E
         if (std::abs(phi - phi_prev) < tol) {
             ++stall_counter;
             if (stall_counter == 10) {
-                std::cerr << "[StrongWolfe] Warning: No significant phi change after 10 steps — "
-                             "stopping. Returning best step found.\n";
+                if (config_.isVerbose) {
+                    std::cerr
+                        << "[StrongWolfe] Warning: Change in phi fell below machine precision "
+                           "for 10 iterations. Returning best step found.\n";
+                }
             }
             break;
         } else {
@@ -122,7 +127,9 @@ double StrongWolfe::zoom(double alpha_lo, double alpha_hi, const ObjectiveFuncti
             break;
         }
     }
-    std::cerr << "[StrongWolfe] Warning: zoom() failed to converge. Returning alpha_lo.\n";
+    if (config_.isVerbose) {
+        std::cerr << "[StrongWolfe] Warning: zoom() failed to converge. Returning alpha_lo.\n";
+    }
     return alpha_lo;
 }
 

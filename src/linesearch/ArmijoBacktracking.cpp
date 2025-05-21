@@ -40,6 +40,8 @@ Eigen::VectorXd ArmijoBacktracking::computeStep(const ObjectiveFunctionBase &f,
         throw std::runtime_error("Backtracking line search: direction is not a descent direction");
     }
     double phi = f.evaluate(x + alpha * direction);
+    double best_phi = phi;
+    double best_alpha = alpha;
     for (int k = 0; k < config_.max_iters; ++k) {
         if (phi <= f_x + config_.c * alpha * dir_deriv) {
             return alpha * direction;
@@ -47,18 +49,31 @@ Eigen::VectorXd ArmijoBacktracking::computeStep(const ObjectiveFunctionBase &f,
         double new_alpha =
             nextTrialStep(alpha, phi, f_x, dir_deriv, alpha_prev, phi_prev, alpha_min);
         if (new_alpha < alpha_min) {
+            if (config_.isVerbose) {
+                std::cerr
+                    << "[ArmijoBacktracking] Warning: Alpha fell below alpha_min. Returning best "
+                       "step found.\n";
+            }
             break; // if step falls below minimum, safeguards against machine precision errors
         }
         alpha_prev = alpha;
         phi_prev = phi;
         phi = f.evaluate(x + new_alpha * direction);
+        alpha = new_alpha;
         double tol_rel = Utility::epsilon * (std::max(std::abs(phi_prev), std::abs(phi)) + 1.0);
         if (std::abs(phi - phi_prev) < tol_rel) { // relative tolerance with absolute floor
-            break;                                // if no detectable change in phi after step
+            if (config_.isVerbose) {
+                std::cerr << "[ArmijoBacktracking] Warning: Change in phi fell below machine "
+                             "precision. Returning best step found.\n";
+            }
+            break; // if no detectable change in phi after step
         }
-        alpha = new_alpha;
+        if (phi < best_phi) {
+            best_alpha = new_alpha;
+            best_phi = phi;
+        }
     }
-    return Eigen::VectorXd::Zero(direction.size()); // return zero vector on stall
+    return best_alpha * direction; // best alpha on stall
 }
 
 double ArmijoBacktracking::nextTrialStep(double alpha, double phi, double phi0, double phi_prime0,
@@ -68,7 +83,7 @@ double ArmijoBacktracking::nextTrialStep(double alpha, double phi, double phi0, 
     case ArmijoConfig::TrialStepOpts::GEOMETRIC:
         alpha_new = config_.rho * alpha;
     case ArmijoConfig::TrialStepOpts::GUARDED_INTERPOLATION:
-        if (alpha_prev < 0) {
+        if (alpha_prev < 0) { // if first iteration
             alpha_new = quadraticInterpolation(phi0, phi, phi_prime0, alpha);
         } else {
             alpha_new = cubicInterpolation(phi0, phi_prev, phi, phi_prime0, alpha_prev, alpha);
