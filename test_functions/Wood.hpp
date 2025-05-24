@@ -28,4 +28,31 @@ class Wood : public ObjectiveFunction<4> {
         grad(3) = 180 * t2 + 20.2 * (x4 - 1) + 19.8 * (x2 - 1);
         return grad;
     }
+
+    Eigen::MatrixXd hessianImpl(const Eigen::VectorXd &x) const override {
+        // unpack
+        const double x1 = x(0), x2 = x(1), x3 = x(2), x4 = x(3);
+        // common expressions
+        double t1 = x2 - x1 * x1;
+        double t2 = x4 - x3 * x3;
+
+        Eigen::MatrixXd H(4, 4);
+        H.setZero();
+
+        H(0, 0) = 1200.0 * x1 * x1 - 400.0 * x2 + 2.0;
+        H(0, 1) = -400.0 * x1;
+        H(1, 0) = H(0, 1);
+
+        H(1, 1) = 200.0 + 20.2;
+        H(1, 3) = 19.8;
+        H(3, 1) = H(1, 3);
+
+        H(2, 2) = 1080.0 * x3 * x3 - 360.0 * x4 + 2.0;
+        H(2, 3) = -360.0 * x3;
+        H(3, 2) = H(2, 3);
+
+        H(3, 3) = 180.0 + 20.2;
+
+        return H;
+    }
 };
