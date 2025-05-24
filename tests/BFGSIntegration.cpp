@@ -1,20 +1,21 @@
 #include "Beale.hpp"
 #include "ConstantFunction.hpp"
+#include "ConvexQuadratic.hpp"
 #include "Himmelblau.hpp"
 #include "Rosenbrock.hpp"
-#include "SimpleQuadratic.hpp"
 #include "Wood.hpp"
 #include "optimization/ConsoleLogger.hpp"
 #include "optimization/LineSearch/ArmijoBacktracking.hpp"
-#include "optimization/Optimizer/SteepestDescent.hpp"
+#include "optimization/LineSearch/StrongWolfe.hpp"
+#include "optimization/Optimizer/BFGS.hpp"
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
 
 using namespace LineSearch;
 using namespace Optimizer;
 
-TEST(SteepestDescentArmijo, ConvergesConvexQuadratic) {
-    SimpleQuadratic f;
+TEST(BFGSIntegration, ConvexQuadArmijo) {
+    ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << 5.0, -3.0;
     ArmijoConfig config;
@@ -23,7 +24,7 @@ TEST(SteepestDescentArmijo, ConvergesConvexQuadratic) {
     config.c = 1e-4;
     config.strategy = ArmijoConfig::TrialStepOpts::GEOMETRIC;
     auto ls = std::make_shared<ArmijoBacktracking>(config);
-    SteepestDescent optimizer(ls, 1000, 1e-8);
+    BFGS optimizer(ls, 1000, 1e-8);
 
     auto result = optimizer.optimize(f, x0);
 
@@ -33,23 +34,7 @@ TEST(SteepestDescentArmijo, ConvergesConvexQuadratic) {
     EXPECT_EQ(result.iterations, 13);
 }
 
-TEST(SteepestDescentArmijo, QuadraticAtSolution) {
-    SimpleQuadratic f;
-    Eigen::VectorXd x0(2);
-    x0 << 0.0, 0.0;
-    ArmijoConfig config;
-    config.alpha_init = 0.8;
-    config.rho = 0.5;
-    config.c = 1e-4;
-    auto ls = std::make_shared<ArmijoBacktracking>(config);
-    SteepestDescent optimizer(ls, 1000, 1e-8);
-    auto result = optimizer.optimize(f, x0);
-
-    EXPECT_TRUE(result.converged);
-    EXPECT_EQ(result.iterations, 0);
-}
-
-TEST(SteepestDescentArmijo, RosenbrockFunction) {
+TEST(BFGSIntegration, RosenbrockArmijo) {
     Rosenbrock f;
     Eigen::Vector2d x0;
     x0 << -1.2, 1.0;
@@ -57,8 +42,9 @@ TEST(SteepestDescentArmijo, RosenbrockFunction) {
     config.alpha_init = 1.0;
     config.rho = 0.5;
     config.c = 1e-4;
+    // default to safeguarded interpolation
     auto ls = std::make_shared<ArmijoBacktracking>(config);
-    SteepestDescent optimizer(ls, 7000, 1e-6);
+    BFGS optimizer(ls, 7000, 1e-6);
     auto result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
@@ -67,28 +53,28 @@ TEST(SteepestDescentArmijo, RosenbrockFunction) {
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-5);
 }
 
-TEST(SteepestDescentArmijo, HimmelblauFunction) {
+TEST(BFGSIntegration, HimmelblauArmijo) {
     Himmelblau f;
     Eigen::Vector2d x0;
     x0 << 0.0, 0.0;
     ArmijoConfig config;
     auto ls = std::make_shared<ArmijoBacktracking>(config);
-    SteepestDescent optimizer(ls, 10000, 1e-8);
+    BFGS optimizer(ls, 10000, 1e-8);
     auto result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
     EXPECT_LT(result.f_val, 1e-7);
-    EXPECT_NEAR(result.x_opt(0), 3.0, 1e-5);
-    EXPECT_NEAR(result.x_opt(1), 2.0, 1e-5);
+    EXPECT_NEAR(result.x_opt(0), 3.584, 1e-3);
+    EXPECT_NEAR(result.x_opt(1), -1.848, 1e-3);
 }
 
-TEST(SteepestDescentArmijo, BealeFunction) {
+TEST(BFGSIntegration, BealeArmijo) {
     Beale f;
     Eigen::Vector2d x0;
     x0 << 1.2, 1.2; // algorithm does not work fast enough for (1, 1)
     ArmijoConfig config;
     auto ls = std::make_shared<ArmijoBacktracking>(config);
-    SteepestDescent optimizer(ls, 10000, 1e-8);
+    BFGS optimizer(ls, 10000, 1e-8);
 
     auto result = optimizer.optimize(f, x0);
     EXPECT_TRUE(result.converged);
@@ -99,13 +85,13 @@ TEST(SteepestDescentArmijo, BealeFunction) {
     EXPECT_NEAR(result.x_opt(1), 0.5, 1e-5);
 }
 
-TEST(SteepestDescentArmijo, WoodFunction) {
+TEST(BFGSIntegration, WoodArmijo) {
     Wood f;
     Eigen::Vector4d x0;
     x0 << -3.0, -1.0, -3.0, -1.0; // recommended start for Wood’s
     ArmijoConfig config;
     auto ls = std::make_shared<ArmijoBacktracking>(config);
-    SteepestDescent optimizer(ls, 10000, 1e-8);
+    BFGS optimizer(ls, 10000, 1e-8);
 
     auto result = optimizer.optimize(f, x0);
     EXPECT_TRUE(result.converged);
@@ -117,30 +103,50 @@ TEST(SteepestDescentArmijo, WoodFunction) {
     }
 }
 
-TEST(SteepestDescentArmijo, FlatFunction) {
-    ConstantFunction f;
-    Eigen::Vector2d x0;
-    x0 << 1.0, 1.0;
-    ArmijoConfig config;
-    auto ls = std::make_shared<ArmijoBacktracking>(config);
-    SteepestDescent optimizer(ls, 100, 1e-8);
+TEST(BFGSIntegration, ConvexQuadWolfe) {
+    ConvexQuadratic f;
+    Eigen::VectorXd x0(2);
+    x0 << 5.0, -3.0;
+    WolfeConfig config;
+    auto ls = std::make_shared<StrongWolfe>(config);
+    BFGS optimizer(ls, 1000, 1e-8);
 
     auto result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
-    EXPECT_EQ(result.iterations, 0);
+    EXPECT_NEAR(result.f_val, 0.0, 1e-10);
+    EXPECT_NEAR(result.x_opt.norm(), 0.0, 1e-7);
 }
 
-TEST(SteepestDescentArmijo, TerminatesMaxIterations) {
+TEST(BFGSIntegration, RosenbrockWolfe) {
     Rosenbrock f;
     Eigen::Vector2d x0;
     x0 << -1.2, 1.0;
-    ArmijoConfig config;
-    auto ls = std::make_shared<ArmijoBacktracking>(config);
-    SteepestDescent optimizer(ls, 10, 1e-30);
-
+    WolfeConfig config;
+    auto ls = std::make_shared<StrongWolfe>(config);
+    BFGS optimizer(ls, 15000, 1e-6);
     auto result = optimizer.optimize(f, x0);
 
-    EXPECT_FALSE(result.converged);
-    EXPECT_EQ(result.iterations, 10);
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.f_val, 1e-6);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-5);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-5);
+}
+
+TEST(BFGSIntegration, WoodWolfe) {
+    Wood f;
+    Eigen::Vector4d x0;
+    x0 << -3.0, -1.0, -3.0, -1.0; // recommended start for Wood’s
+    WolfeConfig config;
+    auto ls = std::make_shared<StrongWolfe>(config);
+    BFGS optimizer(ls, 10000, 1e-6);
+
+    auto result = optimizer.optimize(f, x0);
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.f_val, 1e-7);
+
+    // global minimizer at (1,1,1,1), f(1,1,1,1)=0
+    for (int i = 0; i < 4; ++i) {
+        EXPECT_NEAR(result.x_opt(i), 1.0, 1e-5);
+    }
 }
