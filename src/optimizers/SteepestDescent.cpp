@@ -14,6 +14,12 @@ SteepestDescent::SteepestDescent(std::shared_ptr<LineSearch::SearchStrategyBase>
     , max_iterations_(max_iterations)
     , tol_(tol)
     , logger_(logger) {
+    if (max_iterations_ < 1) {
+        throw std::invalid_argument("[SteepestDescent]: Max iterations must be positive.");
+    }
+    if (tol_ <= 0) {
+        throw std::invalid_argument("[SteepestDescent]: Tolerance must be positive.");
+    }
 }
 
 OptimizationResult SteepestDescent::optimize(const ObjectiveFunctionBase &f,
@@ -37,8 +43,7 @@ OptimizationResult SteepestDescent::optimize(const ObjectiveFunctionBase &f,
         Eigen::VectorXd direction = -grad;
         Eigen::VectorXd step = search_strategy_->computeStep(f, x, direction, grad);
         if (step.norm() == 0.0) {
-            converged = false;
-            msg = "Line search stalled";
+            msg = "Search strategy returned 0 step.";
             break;
         }
         if (logger_) {
