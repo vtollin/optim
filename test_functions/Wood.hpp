@@ -1,9 +1,9 @@
 #pragma once
-#include "optimization/ObjectiveFunction.hpp"
+#include "optim/Functions.hpp"
 #include <Eigen/Dense>
 
 // start at (-3,-1,-3,-1)
-class Wood : public ObjectiveFunction<4> {
+class Wood : public optim::TwiceDifferentiableFunction<4> {
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override {
         double x1 = x(0), x2 = x(1), x3 = x(2), x4 = x(3);

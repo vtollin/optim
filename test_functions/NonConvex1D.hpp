@@ -1,8 +1,8 @@
 #pragma once
-#include "optimization/ObjectiveFunction.hpp"
+#include "optim/Functions.hpp"
 #include <Eigen/Dense>
 
-class NonConvex1D : public ObjectiveFunction<1> {
+class NonConvex1D : public optim::DifferentiableFunction<1> {
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override {
         double xx = x(0);

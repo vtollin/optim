@@ -1,8 +1,8 @@
-#include "optimization/ObjectiveFunction.hpp"
+#include "optim/Functions.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 
-class Rosenbrock : public ObjectiveFunction<2> {
+class Rosenbrock : public optim::TwiceDifferentiableFunction<2> {
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override {
         double a = 1.0;

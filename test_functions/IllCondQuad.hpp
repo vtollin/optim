@@ -1,8 +1,8 @@
 #pragma once
-#include "optimization/ObjectiveFunction.hpp"
+#include "optim/Functions.hpp"
 #include <Eigen/Dense>
 
-class IllCondQuad : public ObjectiveFunction<2> {
+class IllCondQuad : public optim::TwiceDifferentiableFunction<2> {
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override {
         Eigen::Matrix2d diag;

@@ -1,58 +1,68 @@
-#include "optimization/LineSearch/ArmijoBacktracking.hpp"
-#include "optimization/ObjectiveFunctionBase.hpp"
-#include "optimization/OptimizationUtils.hpp"
+#include "optim/linesearch/ArmijoBacktracking.hpp"
+#include "optim/linesearch/Interpolation.hpp"
+#include "optim/logger/Logger.hpp"
+#include "optim/AbstractFunctions.hpp"
+#include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
 #include <cmath>
-#include <iostream>
-#include <limits>
+#include <optional>
 
-using namespace LineSearch;
+using namespace optim::linesearch;
+using optim::abstract::DifferentiableFunction;
 
-ArmijoBacktracking::ArmijoBacktracking(const ArmijoConfig &config) : config_(config) {
+ArmijoBacktracking::ArmijoBacktracking(const ArmijoConfig &config,
+                                       std::shared_ptr<optim::logger::Logger> logger)
+    : SearchStrategyBase(logger), config_(config) {
     if (config.alpha_init <= 0.0) {
-        throw std::invalid_argument("ArmijoConfig: alpha_init must be > 0.");
+        throw std::invalid_argument("[ArmijoBacktracking] alpha_init must be > 0.");
     }
-    if (config.rho <= 0.0 || config.rho >= 1.0) {
-        throw std::invalid_argument("ArmijoConfig: rho must be in (0, 1).");
-    }
-    if (config.c <= 0.0 || config.c >= 1.0) {
-        throw std::invalid_argument("ArmijoConfig: c must be in (0, 1).");
+    if (config.c1 <= 0.0 || config.c1 >= 1.0) {
+        throw std::invalid_argument("[ArmijoBacktracking] c1 must be in (0, 1).");
     }
     if (config.max_iters <= 0) {
-        throw std::invalid_argument("ArmijoConfig: max_iters must be positive.");
+        throw std::invalid_argument("[ArmijoBacktracking] max_iters must be positive.");
     }
 }
 
-Eigen::VectorXd ArmijoBacktracking::computeStep(const ObjectiveFunctionBase &f,
-                                                const Eigen::VectorXd &x,
-                                                const Eigen::VectorXd &direction,
-                                                const Eigen::VectorXd &gradient,
-                                                double alpha_override) {
-    double alpha_min = Utility::sqrt_epsilon *
-                       (1.0 + x.norm()); // minimum protects against machine precision errors
-    double alpha = (alpha_override > 0.0) ? alpha_override : config_.alpha_init;
-    double new_alpha;
-    double alpha_prev = -1.0; // invalid value for first iteration
-    double f_x = f.evaluate(x);
-    double phi_prev;
-    double dir_deriv = Utility::directionalDerivative(f, x, direction);
+// Shrinks alpha from alpha_init until the Armijo sufficient decrease condition is met.
+// Proposes each trial step via polynomial interpolation, falling back to bisection when
+// the interpolated step is not sufficiently conservative. N&W Algorithm 3.1, pp. 56-58.
+double ArmijoBacktracking::computeStep(const DifferentiableFunction &f, const Eigen::VectorXd &x,
+                                       const Eigen::VectorXd &direction,
+                                       const Eigen::VectorXd &gradient) {
+    double dir_deriv = gradient.dot(direction);
     if (dir_deriv >= 0.0) {
-        throw std::runtime_error("Backtracking line search: direction is not a descent direction");
+        throw std::runtime_error("[ArmijoBacktracking] direction is not a descent direction.");
     }
+    double alpha_min = optim::utility::sqrt_epsilon * (1.0 + x.norm());
+    double alpha = config_.alpha_init;
+    if (alpha < alpha_min) { // alpha_init already at machine-precision floor for this x
+        if (logger_ && logger_->shouldLog(optim::logger::Verbosity::WARN)) {
+            logger_->log("[ArmijoBacktracking] Warning: alpha_init (" + std::to_string(alpha) +
+                         ") below minimum step length (" + std::to_string(alpha_min) +
+                         ") at this x. Returning 0.");
+        }
+        return 0.0;
+    }
+
+    double f_x = f.evaluate(x);
     double phi = f.evaluate(x + alpha * direction);
-    double best_phi = phi;
+
     double best_alpha = alpha;
-    for (int k = 0; k < config_.max_iters; ++k) {
-        if (phi <= f_x + config_.c * alpha * dir_deriv) {
-            return alpha * direction;
+    double best_phi = phi;
+    std::optional<double> alpha_prev = std::nullopt;
+    std::optional<double> phi_prev = std::nullopt;
+    int k = 0;
+    for (; k < config_.max_iters; ++k) {
+        if (phi <= f_x + config_.c1 * alpha * dir_deriv) { // sufficient decrease (N&W eq. 3.4)
+            return alpha;
         }
         double new_alpha =
-            nextTrialStep(alpha, phi, f_x, dir_deriv, alpha_prev, phi_prev, alpha_min);
+            nextTrialStep(alpha, phi, alpha_prev, phi_prev, f_x, dir_deriv, alpha_min);
         if (new_alpha < alpha_min) {
-            if (config_.isVerbose) {
-                std::cerr
-                    << "[ArmijoBacktracking] Warning: Alpha fell below alpha_min. Returning best "
-                       "step found.\n";
+            if (logger_ && logger_->shouldLog(optim::logger::Verbosity::WARN)) {
+                logger_->log("[ArmijoBacktracking] Warning: Alpha fell below alpha_min. Returning "
+                             "best step found.");
             }
             break; // if step falls below minimum, safeguards against machine precision errors
         }
@@ -60,58 +70,40 @@ Eigen::VectorXd ArmijoBacktracking::computeStep(const ObjectiveFunctionBase &f,
         phi_prev = phi;
         phi = f.evaluate(x + new_alpha * direction);
         alpha = new_alpha;
-        double tol_rel = Utility::epsilon * (std::max(std::abs(phi_prev), std::abs(phi)) + 1.0);
-        if (std::abs(phi - phi_prev) < tol_rel) { // relative tolerance with absolute floor
-            if (config_.isVerbose) {
-                std::cerr << "[ArmijoBacktracking] Warning: Change in phi fell below machine "
-                             "precision. Returning best step found.\n";
-            }
-            break; // if no detectable change in phi after step
-        }
         if (phi < best_phi) {
             best_alpha = new_alpha;
             best_phi = phi;
         }
+        double tol = optim::utility::epsilon * (std::max(std::abs(phi_prev.value()), std::abs(phi)) + 1.0);
+        if (std::abs(phi - phi_prev.value()) < tol) { // relative tolerance with absolute floor
+            if (logger_ && logger_->shouldLog(optim::logger::Verbosity::WARN)) {
+                logger_->log("[ArmijoBacktracking] Warning: Change in phi fell below machine "
+                             "precision. Returning best step found.");
+            }
+            break;
+        }
     }
-    return best_alpha * direction; // best alpha on stall
+    if (logger_ && logger_->shouldLog(optim::logger::Verbosity::INFO)) {
+        logger_->log("[ArmijoBacktracking] Completed in " + std::to_string(k) +
+                     " iterations, final alpha = " + std::to_string(best_alpha));
+    }
+    return best_alpha;
 }
 
-double ArmijoBacktracking::nextTrialStep(double alpha, double phi, double phi0, double phi_prime0,
-                                         double alpha_prev, double phi_prev, double alpha_min) {
+// Quadratic interpolation on the first call; cubic once a previous iterate is available.
+// Bisects if the interpolated step does not reduce alpha by at least 10%. N&W pp. 56-57.
+double ArmijoBacktracking::nextTrialStep(double alpha, double phi, std::optional<double> alpha_prev,
+                                         std::optional<double> phi_prev, double phi0,
+                                         double phi_prime0, double alpha_min) {
     double alpha_new;
-    switch (config_.strategy) {
-    case ArmijoConfig::TrialStepOpts::GEOMETRIC:
-        alpha_new = config_.rho * alpha;
-    case ArmijoConfig::TrialStepOpts::GUARDED_INTERPOLATION:
-        if (alpha_prev < 0) { // if first iteration
-            alpha_new = quadraticInterpolation(phi0, phi, phi_prime0, alpha);
-        } else {
-            alpha_new = cubicInterpolation(phi0, phi_prev, phi, phi_prime0, alpha_prev, alpha);
-        }
-        if (alpha - alpha_new <= 0.1 * alpha || alpha_new <= alpha_min) { // safeguard
-            alpha_new = alpha / 2;                                        // fall back to bisection
-        }
+    if (!alpha_prev.has_value()) {
+        alpha_new = interpolation::quadraticMinimizer(0.0, alpha, phi0, phi, phi_prime0);
+    } else {
+        alpha_new = interpolation::cubicMinimizer(phi0, phi_prev.value(), phi, phi_prime0,
+                                                  alpha_prev.value(), alpha);
+    }
+    if (alpha - alpha_new <= 0.1 * alpha || alpha_new <= alpha_min) {
+        alpha_new = alpha / 2; // bisect: interpolated step not a sufficient reduction
     }
     return alpha_new;
-}
-double ArmijoBacktracking::quadraticInterpolation(double endpoint_lo, double endpoint_hi,
-                                                  double deriv, double alpha) {
-    // return minimizer
-    double num = deriv * alpha * alpha;
-    double denom = 2 * (endpoint_hi - endpoint_lo - deriv * alpha);
-    return -num / denom;
-}
-
-double ArmijoBacktracking::cubicInterpolation(double endpoint_lo, double endpoint_hi,
-                                              double midpoint, double deriv, double alpha_prev,
-                                              double alpha) {
-    double a_num = alpha_prev * alpha_prev * (midpoint - endpoint_lo - deriv * alpha) -
-                   alpha * alpha * (endpoint_hi - endpoint_lo - deriv * alpha_prev);
-    double b_num =
-        -alpha_prev * alpha_prev * alpha_prev * (midpoint - endpoint_lo - deriv * alpha) +
-        alpha * alpha * alpha * (endpoint_hi - endpoint_lo - deriv * alpha_prev);
-    double denom = alpha_prev * alpha_prev * alpha * alpha * (alpha - alpha_prev);
-    double a = a_num / denom;
-    double b = b_num / denom;
-    return (-b + std::sqrt(b * b - 3 * a * deriv)) / 3 * a;
 }
