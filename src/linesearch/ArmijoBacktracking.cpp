@@ -1,14 +1,14 @@
 #include "optim/linesearch/ArmijoBacktracking.hpp"
 #include "optim/linesearch/Interpolation.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <optional>
 
 using namespace optim::linesearch;
-using optim::abstract::DifferentiableFunction;
+using optim::DifferentiableFunction;
 
 ArmijoBacktracking::ArmijoBacktracking(const ArmijoConfig &config,
                                        std::shared_ptr<optim::logger::Logger> logger)

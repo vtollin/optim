@@ -2,7 +2,7 @@
 #include "optim/linesearch/LineSearchBase.hpp"
 #include "optim/linesearch/SearchStrategyBase.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
@@ -11,8 +11,8 @@
 #include <string>
 
 using namespace optim::linesearch;
-using optim::abstract::TwiceDifferentiableFunction;
-using optim::abstract::DifferentiableFunction;
+using optim::TwiceDifferentiableFunction;
+using optim::DifferentiableFunction;
 using optim::OptimizationResult;
 
 Newton::Newton(SearchStrategy search_strategy, int max_iterations,

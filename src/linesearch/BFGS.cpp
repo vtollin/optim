@@ -2,14 +2,14 @@
 #include "optim/linesearch/LineSearchBase.hpp"
 #include "optim/linesearch/SearchStrategyBase.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
 #include <Eigen/Dense>
 #include <stdexcept>
 #include <string>
 
 using namespace optim::linesearch;
-using optim::abstract::DifferentiableFunction;
+using optim::DifferentiableFunction;
 using optim::OptimizationResult;
 
 BFGS::BFGS(SearchStrategy search_strategy, int max_iterations, optim::ConvergenceCriteria criteria,

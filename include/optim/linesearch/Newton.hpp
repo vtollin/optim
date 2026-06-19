@@ -11,7 +11,7 @@ namespace optim::linesearch {
 class SearchStrategyBase;
 }
 
-namespace optim::abstract {
+namespace optim {
 class DifferentiableFunction;
 class TwiceDifferentiableFunction;
 }
@@ -28,11 +28,11 @@ class Newton : public LineSearchBase {
            std::shared_ptr<optim::logger::Logger> logger = nullptr);
 
     // Primary API: compile-time type check for direct callers
-    optim::OptimizationResult optimize(const optim::abstract::TwiceDifferentiableFunction &f,
+    optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
                                        const Eigen::VectorXd &x0);
 
     // LineSearchBase override: dynamic_casts to TwiceDifferentiableFunction for polymorphic use
-    optim::OptimizationResult optimize(const optim::abstract::DifferentiableFunction &f,
+    optim::OptimizationResult optimize(const optim::DifferentiableFunction &f,
                                        const Eigen::VectorXd &x0) override;
 
   private:

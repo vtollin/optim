@@ -1,12 +1,12 @@
 #include "optim/trustregion/TrustRegionBase.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include "optim/trustregion/QuadraticModel.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 
 using namespace optim::trustregion;
-using optim::abstract::TwiceDifferentiableFunction;
+using optim::TwiceDifferentiableFunction;
 
 UpdateResult TrustRegionBase::update(const TwiceDifferentiableFunction &f, const QuadraticModel &m,
                                      const Eigen::VectorXd &x, const Eigen::VectorXd &step) {

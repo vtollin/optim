@@ -2,7 +2,10 @@
 #include "optim/Functions.hpp"
 #include <Eigen/Dense>
 
-class ConvexQuadratic : public optim::TwiceDifferentiableFunction<2> {
+class ConvexQuadratic : public optim::TwiceDifferentiableFunction {
+  public:
+    ConvexQuadratic() : optim::TwiceDifferentiableFunction(2) {}
+
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override { return 0.5 * x.squaredNorm(); }
 

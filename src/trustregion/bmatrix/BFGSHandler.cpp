@@ -1,9 +1,9 @@
 // src/trustregion/internal/BFGSHandler.cpp
 #include "trustregion/internal/BFGSHandler.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include <stdexcept>
 
-using optim::abstract::DifferentiableFunction;
+using optim::DifferentiableFunction;
 
 optim::trustregion::BFGSHandler::BFGSHandler() : x_prev_(), grad_prev_(), B_prev_() {
 }

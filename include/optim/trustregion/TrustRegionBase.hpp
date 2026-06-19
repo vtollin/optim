@@ -9,7 +9,7 @@ namespace optim::logger {
 class Logger;
 }
 
-namespace optim::abstract { class TwiceDifferentiableFunction; }
+namespace optim { class TwiceDifferentiableFunction; }
 
 namespace optim::trustregion {
 
@@ -21,7 +21,7 @@ struct UpdateResult {
 
 class TrustRegionBase : public optim::OptimizerBase {
   public:
-    virtual optim::OptimizationResult optimize(const optim::abstract::TwiceDifferentiableFunction &f,
+    virtual optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
                                                const Eigen::VectorXd &x0) = 0;
 
   protected:
@@ -46,7 +46,7 @@ class TrustRegionBase : public optim::OptimizerBase {
         }
     };
 
-    UpdateResult update(const optim::abstract::TwiceDifferentiableFunction &f,
+    UpdateResult update(const optim::TwiceDifferentiableFunction &f,
                         const QuadraticModel &m,
                         const Eigen::VectorXd &x, const Eigen::VectorXd &step);
 };

@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 #include <optional>
 
-namespace optim::abstract { class DifferentiableFunction; }
+namespace optim { class DifferentiableFunction; }
 
 namespace optim::linesearch {
 struct ArmijoConfig {
@@ -18,7 +18,7 @@ class ArmijoBacktracking : public SearchStrategyBase {
     explicit ArmijoBacktracking(const ArmijoConfig &config,
                                 std::shared_ptr<optim::logger::Logger> logger = nullptr);
 
-    double computeStep(const optim::abstract::DifferentiableFunction &f, const Eigen::VectorXd &x,
+    double computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
                        const Eigen::VectorXd &direction, const Eigen::VectorXd &gradient) override;
     void setConfig(const ArmijoConfig &cfg);
 

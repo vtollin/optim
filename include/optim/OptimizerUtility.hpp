@@ -1,13 +1,11 @@
 #pragma once
-#include "AbstractFunctions.hpp"
+#include "Functions.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <limits>
 
-namespace optim::abstract { class DifferentiableFunction; }
-
 namespace optim::utility {
-inline double directionalDerivative(const optim::abstract::DifferentiableFunction &f,
+inline double directionalDerivative(const optim::DifferentiableFunction &f,
                                     const Eigen::VectorXd &x,
                                     const Eigen::VectorXd &direction) {
     return f.gradient(x).dot(direction);

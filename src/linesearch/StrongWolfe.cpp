@@ -1,14 +1,14 @@
 #include "optim/linesearch/StrongWolfe.hpp"
 #include "optim/linesearch/Interpolation.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <limits>
 
 using namespace optim::linesearch;
-using optim::abstract::DifferentiableFunction;
+using optim::DifferentiableFunction;
 
 StrongWolfe::StrongWolfe(const WolfeConfig &config, std::shared_ptr<optim::logger::Logger> logger)
     : SearchStrategyBase(logger), config_(config) {

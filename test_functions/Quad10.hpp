@@ -2,7 +2,10 @@
 #include "optim/Functions.hpp"
 #include <Eigen/Dense>
 
-class Quad10 : public optim::DifferentiableFunction<1> {
+class Quad10 : public optim::DifferentiableFunction {
+  public:
+    Quad10() : optim::DifferentiableFunction(1) {}
+
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override { return 10 * x(0) * x(0); }
     Eigen::VectorXd gradientImpl(const Eigen::VectorXd &x) const override {

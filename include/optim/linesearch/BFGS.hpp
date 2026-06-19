@@ -11,7 +11,7 @@ namespace optim::linesearch {
 class SearchStrategyBase;
 }
 
-namespace optim::abstract { class DifferentiableFunction; }
+namespace optim { class DifferentiableFunction; }
 
 namespace optim::linesearch {
 class BFGS : public LineSearchBase {
@@ -24,7 +24,7 @@ class BFGS : public LineSearchBase {
          optim::ConvergenceCriteria criteria = {},
          std::shared_ptr<optim::logger::Logger> logger = nullptr);
 
-    optim::OptimizationResult optimize(const optim::abstract::DifferentiableFunction &f,
+    optim::OptimizationResult optimize(const optim::DifferentiableFunction &f,
                                        const Eigen::VectorXd &x0) override;
 
   private:

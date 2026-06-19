@@ -1,12 +1,12 @@
 #include "optim/trustregion/Dogleg.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include <Eigen/Dense>
 #include <string>
 
 using namespace optim::trustregion;
 using optim::OptimizationResult;
-using optim::abstract::TwiceDifferentiableFunction;
+using optim::TwiceDifferentiableFunction;
 
 Dogleg::Dogleg(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
                double delta_max, double eta, std::shared_ptr<optim::logger::Logger> logger)

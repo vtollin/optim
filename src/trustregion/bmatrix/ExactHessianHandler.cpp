@@ -1,10 +1,10 @@
 #include "trustregion/internal/ExactHessianHandler.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include <Eigen/Dense>
 #include <stdexcept>
 
-using optim::abstract::DifferentiableFunction;
-using optim::abstract::TwiceDifferentiableFunction;
+using optim::DifferentiableFunction;
+using optim::TwiceDifferentiableFunction;
 
 optim::trustregion::ExactHessianHandler::ExactHessianHandler() = default;
 

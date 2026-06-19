@@ -3,7 +3,7 @@
 #include "optim/OptimizationResult.hpp"
 #include <Eigen/Dense>
 
-namespace optim::abstract { class DifferentiableFunction; }
+namespace optim { class DifferentiableFunction; }
 
 namespace optim::logger {
 class Logger;
@@ -26,7 +26,7 @@ class LineSearchBase : public optim::OptimizerBase {
     void setConfig(const WolfeConfig &cfg);
     void setLogger(std::shared_ptr<optim::logger::Logger> logger) override;
 
-    virtual optim::OptimizationResult optimize(const optim::abstract::DifferentiableFunction &f,
+    virtual optim::OptimizationResult optimize(const optim::DifferentiableFunction &f,
                                                const Eigen::VectorXd &x0) = 0;
 
   protected:

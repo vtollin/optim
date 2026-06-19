@@ -6,14 +6,14 @@ namespace optim::logger {
 class Logger;
 }
 
-namespace optim::abstract { class DifferentiableFunction; }
+namespace optim { class DifferentiableFunction; }
 
 namespace optim::linesearch {
 class SearchStrategyBase {
   public:
     virtual ~SearchStrategyBase() = default;
 
-    virtual double computeStep(const optim::abstract::DifferentiableFunction &f,
+    virtual double computeStep(const optim::DifferentiableFunction &f,
                                const Eigen::VectorXd &x,
                                const Eigen::VectorXd &direction,
                                const Eigen::VectorXd &gradient) = 0;

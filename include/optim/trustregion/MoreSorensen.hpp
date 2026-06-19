@@ -7,7 +7,7 @@ namespace optim::logger {
 class Logger;
 }
 
-namespace optim::abstract { class TwiceDifferentiableFunction; }
+namespace optim { class TwiceDifferentiableFunction; }
 
 namespace optim::trustregion { class BMatrixHandler; }
 
@@ -20,7 +20,7 @@ class MoreSorensen : public TrustRegionBase {
                  std::shared_ptr<optim::logger::Logger> logger = nullptr);
     ~MoreSorensen();
 
-    optim::OptimizationResult optimize(const optim::abstract::TwiceDifferentiableFunction &f,
+    optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
                                        const Eigen::VectorXd &x0) override;
 
   private:

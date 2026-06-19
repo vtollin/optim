@@ -3,7 +3,7 @@
 #include "internal/BMatrixHandler.hpp"
 #include "internal/ExactHessianHandler.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
@@ -12,7 +12,7 @@
 #include <string>
 using namespace optim::trustregion;
 using optim::OptimizationResult;
-using optim::abstract::TwiceDifferentiableFunction;
+using optim::TwiceDifferentiableFunction;
 
 MoreSorensen::MoreSorensen(int max_iterations, optim::ConvergenceCriteria criteria,
                            double delta_init, double delta_max, double eta, BMatrixConfig cfg,

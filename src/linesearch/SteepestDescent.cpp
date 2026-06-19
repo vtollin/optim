@@ -1,14 +1,14 @@
 #include "optim/linesearch/SteepestDescent.hpp"
 #include "optim/linesearch/SearchStrategyBase.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/AbstractFunctions.hpp"
+#include "optim/Functions.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
 #include <string>
 
 using namespace optim::linesearch;
 using optim::OptimizationResult;
-using optim::abstract::DifferentiableFunction;
+using optim::DifferentiableFunction;
 
 SteepestDescent::SteepestDescent(SearchStrategy search_strategy, int max_iterations,
                                  optim::ConvergenceCriteria criteria,

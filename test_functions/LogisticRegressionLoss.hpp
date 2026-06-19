@@ -2,7 +2,7 @@
 #include "optim/Functions.hpp"
 #include <Eigen/Dense>
 
-class LogisticRegressionLoss : public optim::TwiceDifferentiableFunction<3> {
+class LogisticRegressionLoss : public optim::TwiceDifferentiableFunction {
     Eigen::MatrixXd X_;
     Eigen::VectorXd y_;
     double lambda_;
@@ -39,5 +39,6 @@ class LogisticRegressionLoss : public optim::TwiceDifferentiableFunction<3> {
 
   public:
     LogisticRegressionLoss(Eigen::MatrixXd X, Eigen::VectorXd y, double lambda)
-        : X_(X), y_(y), lambda_(lambda) {}
+        : optim::TwiceDifferentiableFunction(static_cast<int>(X.cols()))
+        , X_(X), y_(y), lambda_(lambda) {}
 };

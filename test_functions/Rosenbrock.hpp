@@ -2,7 +2,10 @@
 #include <Eigen/Dense>
 #include <cmath>
 
-class Rosenbrock : public optim::TwiceDifferentiableFunction<2> {
+class Rosenbrock : public optim::TwiceDifferentiableFunction {
+  public:
+    Rosenbrock() : optim::TwiceDifferentiableFunction(2) {}
+
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override {
         double a = 1.0;

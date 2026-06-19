@@ -3,7 +3,10 @@
 #include <Eigen/Dense>
 
 // start at (0, 0)
-class Himmelblau : public optim::TwiceDifferentiableFunction<2> {
+class Himmelblau : public optim::TwiceDifferentiableFunction {
+  public:
+    Himmelblau() : optim::TwiceDifferentiableFunction(2) {}
+
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override {
         double x0 = x(0);

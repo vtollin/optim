@@ -3,7 +3,10 @@
 #include <Eigen/Dense>
 
 // start at (1,1)
-class Beale : public optim::TwiceDifferentiableFunction<2> {
+class Beale : public optim::TwiceDifferentiableFunction {
+  public:
+    Beale() : optim::TwiceDifferentiableFunction(2) {}
+
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override {
         double x0 = x(0), x1 = x(1);
