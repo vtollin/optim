@@ -1,6 +1,6 @@
 #include "optim/linesearch/BFGS.hpp"
 #include "optim/linesearch/LineSearchBase.hpp"
-#include "optim/linesearch/SearchStrategyBase.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
@@ -46,7 +46,7 @@ OptimizationResult BFGS::optimize(const DifferentiableFunction &f, const Eigen::
             break;
         }
         Eigen::VectorXd direction = -H * grad;
-        double alpha = search_strategy_->computeStep(f, x, direction, grad);
+        double alpha = step_length_policy_->computeStep(f, x, direction, grad);
         if (alpha == 0.0) {
             msg = "Search strategy returned 0 step.";
             break;

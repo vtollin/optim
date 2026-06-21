@@ -1,5 +1,5 @@
 #pragma once
-#include "optim/linesearch/SearchStrategyBase.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
 
@@ -16,7 +16,7 @@ struct WolfeConfig {
     double c2 = 0.9;
 };
 
-class StrongWolfe : public SearchStrategyBase {
+class StrongWolfe : public StepLengthPolicy {
   public:
     explicit StrongWolfe(const WolfeConfig &config,
                          std::shared_ptr<optim::logger::Logger> logger = nullptr);

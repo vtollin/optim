@@ -7,14 +7,10 @@ namespace optim::logger {
 class Logger;
 }
 
-namespace optim::linesearch {
-class SearchStrategyBase;
-}
-
 namespace optim { class DifferentiableFunction; }
 
 namespace optim::linesearch {
-class BFGS : public LineSearchBase {
+class BFGS : public LineSearchBase<optim::DifferentiableFunction> {
   public:
     // Strong Wolfe is the default: the curvature condition it enforces implies s^T y > 0,
     // which is what makes the BFGS update maintain positive definiteness.

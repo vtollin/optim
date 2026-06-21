@@ -1,5 +1,5 @@
 #include "optim/linesearch/SteepestDescent.hpp"
-#include "optim/linesearch/SearchStrategyBase.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizerUtility.hpp"
@@ -43,7 +43,7 @@ OptimizationResult SteepestDescent::optimize(const DifferentiableFunction &f,
             break;
         }
         Eigen::VectorXd direction = -grad;
-        double alpha = search_strategy_->computeStep(f, x, direction, grad);
+        double alpha = step_length_policy_->computeStep(f, x, direction, grad);
         if (alpha == 0.0) {
             msg = "Search strategy returned 0 step.";
             break;

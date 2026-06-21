@@ -7,32 +7,20 @@ namespace optim::logger {
 class Logger;
 }
 
-namespace optim::linesearch {
-class SearchStrategyBase;
-}
-
-namespace optim {
-class DifferentiableFunction;
-class TwiceDifferentiableFunction;
-}
+namespace optim { class TwiceDifferentiableFunction; }
 
 namespace optim::linesearch {
 struct CholeskyFactor {
     Eigen::MatrixXd L;
     Eigen::VectorXd d;
 };
-class Newton : public LineSearchBase {
+class Newton : public LineSearchBase<optim::TwiceDifferentiableFunction> {
   public:
     Newton(SearchStrategy search_strategy = SearchStrategy::ARMIJO, int max_iterations = 1000,
            optim::ConvergenceCriteria criteria = {},
            std::shared_ptr<optim::logger::Logger> logger = nullptr);
 
-    // Primary API: compile-time type check for direct callers
     optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
-                                       const Eigen::VectorXd &x0);
-
-    // LineSearchBase override: dynamic_casts to TwiceDifferentiableFunction for polymorphic use
-    optim::OptimizationResult optimize(const optim::DifferentiableFunction &f,
                                        const Eigen::VectorXd &x0) override;
 
   private:

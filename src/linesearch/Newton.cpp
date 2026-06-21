@@ -1,6 +1,6 @@
 #include "optim/linesearch/Newton.hpp"
 #include "optim/linesearch/LineSearchBase.hpp"
-#include "optim/linesearch/SearchStrategyBase.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
@@ -12,7 +12,6 @@
 
 using namespace optim::linesearch;
 using optim::TwiceDifferentiableFunction;
-using optim::DifferentiableFunction;
 using optim::OptimizationResult;
 
 Newton::Newton(SearchStrategy search_strategy, int max_iterations,
@@ -55,7 +54,7 @@ OptimizationResult Newton::optimize(const TwiceDifferentiableFunction &f,
         Eigen::VectorXd direction =
             factor.L.triangularView<Eigen::Lower>().transpose().solve(z); // L^Tp = z
 
-        double alpha = search_strategy_->computeStep(f, x, direction, grad);
+        double alpha = step_length_policy_->computeStep(f, x, direction, grad);
         if (alpha == 0.0) {
             msg = "Search strategy returned 0 step.";
             break;
@@ -79,14 +78,6 @@ OptimizationResult Newton::optimize(const TwiceDifferentiableFunction &f,
         }
     }
     return OptimizationResult{x, f.evaluate(x), k, converged, msg};
-}
-
-OptimizationResult Newton::optimize(const DifferentiableFunction &f, const Eigen::VectorXd &x0) {
-    try {
-        return optimize(dynamic_cast<const TwiceDifferentiableFunction &>(f), x0);
-    } catch (const std::bad_cast &) {
-        throw std::invalid_argument("[Newton] optimize() requires a TwiceDifferentiableFunction.");
-    }
 }
 
 // Computes a modified LDL^T factorization where each diagonal d(j) is bumped up as needed to

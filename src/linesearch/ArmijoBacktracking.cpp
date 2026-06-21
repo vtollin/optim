@@ -12,7 +12,7 @@ using optim::DifferentiableFunction;
 
 ArmijoBacktracking::ArmijoBacktracking(const ArmijoConfig &config,
                                        std::shared_ptr<optim::logger::Logger> logger)
-    : SearchStrategyBase(logger), config_(config) {
+    : StepLengthPolicy(logger), config_(config) {
     if (config.alpha_init <= 0.0) {
         throw std::invalid_argument("[ArmijoBacktracking] alpha_init must be > 0.");
     }

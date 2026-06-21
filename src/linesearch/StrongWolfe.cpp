@@ -11,7 +11,7 @@ using namespace optim::linesearch;
 using optim::DifferentiableFunction;
 
 StrongWolfe::StrongWolfe(const WolfeConfig &config, std::shared_ptr<optim::logger::Logger> logger)
-    : SearchStrategyBase(logger), config_(config) {
+    : StepLengthPolicy(logger), config_(config) {
     if (config.alpha_init <= 0.0) {
         throw std::invalid_argument("[StrongWolfe] alpha_init must be > 0.");
     }

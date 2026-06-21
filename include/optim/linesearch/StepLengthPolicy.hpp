@@ -9,9 +9,9 @@ class Logger;
 namespace optim { class DifferentiableFunction; }
 
 namespace optim::linesearch {
-class SearchStrategyBase {
+class StepLengthPolicy {
   public:
-    virtual ~SearchStrategyBase() = default;
+    virtual ~StepLengthPolicy() = default;
 
     virtual double computeStep(const optim::DifferentiableFunction &f,
                                const Eigen::VectorXd &x,
@@ -21,7 +21,7 @@ class SearchStrategyBase {
     void setLogger(std::shared_ptr<optim::logger::Logger> logger) { logger_ = logger; }
 
   protected:
-    explicit SearchStrategyBase(std::shared_ptr<optim::logger::Logger> logger) : logger_(logger) {}
+    explicit StepLengthPolicy(std::shared_ptr<optim::logger::Logger> logger) : logger_(logger) {}
     std::shared_ptr<optim::logger::Logger> logger_;
 };
 } // namespace optim::linesearch

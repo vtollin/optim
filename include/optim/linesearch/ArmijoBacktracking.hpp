@@ -1,5 +1,5 @@
 #pragma once
-#include "optim/linesearch/SearchStrategyBase.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
 #include <optional>
@@ -13,7 +13,7 @@ struct ArmijoConfig {
     double c1 = 1e-4;
 };
 
-class ArmijoBacktracking : public SearchStrategyBase {
+class ArmijoBacktracking : public StepLengthPolicy {
   public:
     explicit ArmijoBacktracking(const ArmijoConfig &config,
                                 std::shared_ptr<optim::logger::Logger> logger = nullptr);
