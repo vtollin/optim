@@ -1,10 +1,12 @@
 #pragma once
-#include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/OptimizerUtility.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
 #include <Eigen/Dense>
 #include <optional>
 
-namespace optim { class DifferentiableFunction; }
+namespace optim {
+class DifferentiableFunction;
+}
 
 namespace optim::linesearch {
 struct ArmijoConfig {
@@ -15,7 +17,7 @@ struct ArmijoConfig {
 
 class ArmijoBacktracking : public StepLengthPolicy {
   public:
-    explicit ArmijoBacktracking(const ArmijoConfig &config,
+    explicit ArmijoBacktracking(const ArmijoConfig &config = ArmijoConfig{},
                                 std::shared_ptr<optim::logger::Logger> logger = nullptr);
 
     double computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,

@@ -21,10 +21,9 @@ TEST(BFGSIntegration, ConvexQuadArmijo) {
 
     ArmijoConfig config;
     config.alpha_init = 0.8;
-    config.c = 1e-4;
+    config.c1 = 1e-4;
 
-    BFGS optimizer(SearchStrategy::ARMIJO, 1000, {});
-    optimizer.setConfig(config);
+    BFGS optimizer(std::make_unique<ArmijoBacktracking>(config), 1000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -41,10 +40,9 @@ TEST(BFGSIntegration, RosenbrockArmijo) {
 
     ArmijoConfig config;
     config.alpha_init = 1.0;
-    config.c = 1e-4;
+    config.c1 = 1e-4;
 
-    BFGS optimizer(SearchStrategy::ARMIJO, 7000, {});
-    optimizer.setConfig(config);
+    BFGS optimizer(std::make_unique<ArmijoBacktracking>(config), 7000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -59,7 +57,7 @@ TEST(BFGSIntegration, HimmelblauArmijo) {
     Eigen::Vector2d x0;
     x0 << 0.0, 0.0;
 
-    BFGS optimizer(SearchStrategy::ARMIJO, 10000, {});
+    BFGS optimizer(StepLengthMethod::ARMIJO, 10000, {});
     auto result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
@@ -73,10 +71,7 @@ TEST(BFGSIntegration, BealeArmijo) {
     Eigen::Vector2d x0;
     x0 << 1.2, 1.2;
 
-    ArmijoConfig config;
-    // leave alpha_init and c at their defaults
-    BFGS optimizer(SearchStrategy::ARMIJO, 10000, {});
-    optimizer.setConfig(config);
+    BFGS optimizer(StepLengthMethod::ARMIJO, 10000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -91,9 +86,7 @@ TEST(BFGSIntegration, WoodArmijo) {
     Eigen::Vector4d x0;
     x0 << -3.0, -1.0, -3.0, -1.0;
 
-    ArmijoConfig config;
-    BFGS optimizer(SearchStrategy::ARMIJO, 10000, {});
-    optimizer.setConfig(config);
+    BFGS optimizer(StepLengthMethod::ARMIJO, 10000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -109,9 +102,7 @@ TEST(BFGSIntegration, ConvexQuadWolfe) {
     Eigen::VectorXd x0(2);
     x0 << 5.0, -3.0;
 
-    WolfeConfig config;
-    BFGS optimizer(SearchStrategy::STRONG_WOLFE, 1000, {});
-    optimizer.setConfig(config);
+    BFGS optimizer(StepLengthMethod::STRONG_WOLFE, 1000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -124,9 +115,8 @@ TEST(BFGSIntegration, RosenbrockWolfe) {
     Rosenbrock f;
     Eigen::Vector2d x0;
     x0 << -1.2, 1.0;
-    WolfeConfig config;
-    BFGS optimizer(SearchStrategy::STRONG_WOLFE, 15000, {});
-    optimizer.setConfig(config);
+
+    BFGS optimizer(StepLengthMethod::STRONG_WOLFE, 15000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -141,9 +131,7 @@ TEST(BFGSIntegration, WoodWolfe) {
     Eigen::Vector4d x0;
     x0 << -3.0, -1.0, -3.0, -1.0;
 
-    WolfeConfig config;
-    BFGS optimizer(SearchStrategy::STRONG_WOLFE, 10000, {});
-    optimizer.setConfig(config);
+    BFGS optimizer(StepLengthMethod::STRONG_WOLFE, 10000, {});
 
     auto result = optimizer.optimize(f, x0);
 

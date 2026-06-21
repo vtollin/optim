@@ -1,9 +1,10 @@
 #include "optim/linesearch/BFGS.hpp"
-#include "optim/linesearch/LineSearchBase.hpp"
-#include "optim/linesearch/StepLengthPolicy.hpp"
-#include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
+#include "optim/linesearch/LineSearchBase.hpp"
+#include "optim/linesearch/StepLengthMethod.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
+#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
 #include <stdexcept>
 #include <string>
@@ -12,9 +13,14 @@ using namespace optim::linesearch;
 using optim::DifferentiableFunction;
 using optim::OptimizationResult;
 
-BFGS::BFGS(SearchStrategy search_strategy, int max_iterations, optim::ConvergenceCriteria criteria,
+BFGS::BFGS(StepLengthMethod method, int max_iterations, optim::ConvergenceCriteria criteria,
            std::shared_ptr<optim::logger::Logger> logger)
-    : LineSearchBase(search_strategy, max_iterations, criteria, logger) {
+    : BFGS(makeStepLengthPolicy(method), max_iterations, criteria, logger) {
+}
+
+BFGS::BFGS(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
+           optim::ConvergenceCriteria criteria, std::shared_ptr<optim::logger::Logger> logger)
+    : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[BFGS] max_iterations must be positive.");
     }
@@ -25,7 +31,8 @@ BFGS::BFGS(SearchStrategy search_strategy, int max_iterations, optim::Convergenc
 
 // Maintains a quasi-Newton approximation to the Hessian updated each iteration via the BFGS
 // rank-2 formula. Powell damping in updateBFGS enforces the curvature condition when the line
-// search does not (e.g. Armijo). Strong Wolfe is the recommended default. N&W Section 6.1, p. 136.
+// search does not (e.g. Armijo). Strong Wolfe is the recommended default. N&W Section 6.1, p.
+// 136.
 OptimizationResult BFGS::optimize(const DifferentiableFunction &f, const Eigen::VectorXd &x0) {
     int n = f.sourceDimension();
     if (x0.size() != n) {
@@ -40,7 +47,8 @@ OptimizationResult BFGS::optimize(const DifferentiableFunction &f, const Eigen::
     Eigen::MatrixXd H = Eigen::MatrixXd::Identity(n, n);
     Eigen::VectorXd grad = f.gradient(x);
     for (; k < max_iterations_; ++k) {
-        if (grad.norm() < criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance with absolute floor
+        if (grad.norm() <
+            criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance with absolute floor
             converged = true;
             msg = "Converged: gradient norm fell below tolerance.";
             break;
@@ -80,7 +88,7 @@ OptimizationResult BFGS::optimize(const DifferentiableFunction &f, const Eigen::
 // Adapted from N&W Algorithm 18.2, p. 537.
 void BFGS::updateBFGS(Eigen::MatrixXd &H, const Eigen::VectorXd &s, const Eigen::VectorXd &y_k) {
     Eigen::VectorXd Hs = H * s;
-    double sHs  = s.dot(Hs);
+    double sHs = s.dot(Hs);
     double sy_k = s.dot(y_k);
     Eigen::VectorXd y;
     if (sy_k < 0.2 * sHs) { // Powell damping: enforce s^T y >= 0.2 * s^T H s
@@ -91,10 +99,10 @@ void BFGS::updateBFGS(Eigen::MatrixXd &H, const Eigen::VectorXd &s, const Eigen:
     }
 
     // H_{k+1} = (I - rho s y^T) H_k (I - rho y s^T) + rho s s^T
-    double rho       = 1.0 / s.dot(y);
+    double rho = 1.0 / s.dot(y);
     Eigen::VectorXd Hy = H * y;
-    double c         = 1.0 + rho * y.dot(Hy);
-    H.noalias()     -= rho * Hy * s.transpose();
-    H.noalias()     -= rho * s  * Hy.transpose();
-    H.noalias()     += rho * c  * s * s.transpose();
+    double c = 1.0 + rho * y.dot(Hy);
+    H.noalias() -= rho * Hy * s.transpose();
+    H.noalias() -= rho * s * Hy.transpose();
+    H.noalias() += rho * c * s * s.transpose();
 }

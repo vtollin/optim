@@ -19,11 +19,9 @@ TEST(NewtonIntegration, ConvexQuadArmijo) {
     Eigen::VectorXd x0(2);
     x0 << 5.0, -3.0;
 
-    // customize only the initial step size
     ArmijoConfig config;
     config.alpha_init = 0.8;
-    Newton optimizer(SearchStrategy::ARMIJO, /*max_iters=*/1000, {});
-    optimizer.setConfig(config);
+    Newton optimizer(std::make_unique<ArmijoBacktracking>(config), /*max_iters=*/1000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -40,9 +38,7 @@ TEST(NewtonIntegration, RosenbrockArmijo) {
 
     ArmijoConfig config;
     config.alpha_init = 1.0;
-
-    Newton optimizer(SearchStrategy::ARMIJO, /*max_iters=*/10000, {});
-    optimizer.setConfig(config);
+    Newton optimizer(std::make_unique<ArmijoBacktracking>(config), /*max_iters=*/10000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -58,8 +54,7 @@ TEST(NewtonIntegration, HimmelblauArmijo) {
     Eigen::Vector2d x0;
     x0 << 0.0, 0.0;
 
-    // default Armijo settings
-    Newton optimizer(SearchStrategy::ARMIJO, /*max_iters=*/10000, {});
+    Newton optimizer(StepLengthMethod::ARMIJO, /*max_iters=*/10000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -73,11 +68,9 @@ TEST(NewtonIntegration, HimmelblauArmijo) {
 TEST(NewtonIntegration, BealeArmijo) {
     Beale f;
     Eigen::Vector2d x0;
-    x0 << 1.2, 1.2; // algorithm does not work fast enough from (1,1)
+    x0 << 1.2, 1.2;
 
-    ArmijoConfig config; // use defaults
-    Newton optimizer(SearchStrategy::ARMIJO, /*max_iters=*/10000, {});
-    optimizer.setConfig(config);
+    Newton optimizer(StepLengthMethod::ARMIJO, /*max_iters=*/10000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -91,11 +84,9 @@ TEST(NewtonIntegration, BealeArmijo) {
 TEST(NewtonIntegration, WoodArmijo) {
     Wood f;
     Eigen::Vector4d x0;
-    x0 << -3.0, -1.0, -3.0, -1.0; // recommended start for Wood
+    x0 << -3.0, -1.0, -3.0, -1.0;
 
-    ArmijoConfig config; // use defaults
-    Newton optimizer(SearchStrategy::ARMIJO, /*max_iters=*/10000, {});
-    optimizer.setConfig(config);
+    Newton optimizer(StepLengthMethod::ARMIJO, /*max_iters=*/10000, {});
 
     auto result = optimizer.optimize(f, x0);
 

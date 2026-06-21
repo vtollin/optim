@@ -1,5 +1,6 @@
 #include "optim/linesearch/Newton.hpp"
 #include "optim/linesearch/LineSearchBase.hpp"
+#include "optim/linesearch/StepLengthMethod.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
@@ -14,9 +15,13 @@ using namespace optim::linesearch;
 using optim::TwiceDifferentiableFunction;
 using optim::OptimizationResult;
 
-Newton::Newton(SearchStrategy search_strategy, int max_iterations,
+Newton::Newton(StepLengthMethod method, int max_iterations, optim::ConvergenceCriteria criteria,
+               std::shared_ptr<optim::logger::Logger> logger)
+    : Newton(makeStepLengthPolicy(method), max_iterations, criteria, logger) {}
+
+Newton::Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
                optim::ConvergenceCriteria criteria, std::shared_ptr<optim::logger::Logger> logger)
-    : LineSearchBase(search_strategy, max_iterations, criteria, logger) {
+    : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[Newton] Max iterations must be positive.");
     }

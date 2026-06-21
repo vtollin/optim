@@ -1,4 +1,5 @@
 #include "optim/linesearch/SteepestDescent.hpp"
+#include "optim/linesearch/StepLengthMethod.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
@@ -10,14 +11,19 @@ using namespace optim::linesearch;
 using optim::OptimizationResult;
 using optim::DifferentiableFunction;
 
-SteepestDescent::SteepestDescent(SearchStrategy search_strategy, int max_iterations,
+SteepestDescent::SteepestDescent(StepLengthMethod method, int max_iterations,
                                  optim::ConvergenceCriteria criteria,
                                  std::shared_ptr<optim::logger::Logger> logger)
-    : LineSearchBase(search_strategy, max_iterations, criteria, logger) {
+    : SteepestDescent(makeStepLengthPolicy(method), max_iterations, criteria, logger) {}
+
+SteepestDescent::SteepestDescent(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
+                                 optim::ConvergenceCriteria criteria,
+                                 std::shared_ptr<optim::logger::Logger> logger)
+    : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[SteepestDescent] Max iterations must be positive.");
     }
-    if (criteria.grad_tol <= 0 || criteria.f_tol <= 0 || criteria.step_tol <= 0) {
+    if (criteria_.grad_tol <= 0 || criteria_.f_tol <= 0 || criteria_.step_tol <= 0) {
         throw std::invalid_argument("[SteepestDescent] Tolerances must be positive.");
     }
 }

@@ -22,10 +22,9 @@ TEST(SteepestDescentIntegration, ConvexQuadArmijo) {
 
     ArmijoConfig config;
     config.alpha_init = 0.8;
-    config.c = 1e-4;
+    config.c1 = 1e-4;
 
-    SteepestDescent optimizer(SearchStrategy::ARMIJO, /*max_iters=*/1000, {});
-    optimizer.setConfig(config);
+    SteepestDescent optimizer(std::make_unique<ArmijoBacktracking>(config), /*max_iters=*/1000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -43,10 +42,9 @@ TEST(SteepestDescentIntegration, RosenbrockArmijo) {
 
     ArmijoConfig config;
     config.alpha_init = 1.0;
-    config.c = 1e-4;
+    config.c1 = 1e-4;
 
-    SteepestDescent optimizer(SearchStrategy::ARMIJO, /*max_iters=*/7000, {});
-    optimizer.setConfig(config);
+    SteepestDescent optimizer(std::make_unique<ArmijoBacktracking>(config), /*max_iters=*/7000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -62,8 +60,7 @@ TEST(SteepestDescentIntegration, HimmelblauArmijo) {
     Eigen::Vector2d x0;
     x0 << 0.5, 0.5;
 
-    // default Armijo parameters
-    SteepestDescent optimizer(SearchStrategy::ARMIJO, /*max_iters=*/10000, {});
+    SteepestDescent optimizer(StepLengthMethod::ARMIJO, /*max_iters=*/10000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -79,9 +76,7 @@ TEST(SteepestDescentIntegration, BealeArmijo) {
     Eigen::Vector2d x0;
     x0 << 1.2, 1.2;
 
-    ArmijoConfig config; // use defaults
-    SteepestDescent optimizer(SearchStrategy::ARMIJO, /*max_iters=*/10000, {});
-    optimizer.setConfig(config);
+    SteepestDescent optimizer(StepLengthMethod::ARMIJO, /*max_iters=*/10000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -97,9 +92,7 @@ TEST(SteepestDescentIntegration, WoodArmijo) {
     Eigen::Vector4d x0;
     x0 << -3.0, -1.0, -3.0, -1.0;
 
-    ArmijoConfig config; // use defaults
-    SteepestDescent optimizer(SearchStrategy::ARMIJO, /*max_iters=*/10000, {});
-    optimizer.setConfig(config);
+    SteepestDescent optimizer(StepLengthMethod::ARMIJO, /*max_iters=*/10000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -116,9 +109,7 @@ TEST(SteepestDescentIntegration, ConvexQuadWolfe) {
     Eigen::VectorXd x0(2);
     x0 << 5.0, -3.0;
 
-    WolfeConfig config; // use defaults
-    SteepestDescent optimizer(SearchStrategy::STRONG_WOLFE, /*max_iters=*/1000, {});
-    optimizer.setConfig(config);
+    SteepestDescent optimizer(StepLengthMethod::STRONG_WOLFE, /*max_iters=*/1000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -133,9 +124,7 @@ TEST(SteepestDescentIntegration, RosenbrockWolfe) {
     Eigen::Vector2d x0;
     x0 << -1.2, 1.0;
 
-    WolfeConfig config; // use defaults
-    SteepestDescent optimizer(SearchStrategy::STRONG_WOLFE, 15000, {});
-    optimizer.setConfig(config);
+    SteepestDescent optimizer(StepLengthMethod::STRONG_WOLFE, 15000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -153,9 +142,7 @@ TEST(SteepestDescentIntegration, WoodWolfe) {
 
     auto logger = std::make_shared<optim::logger::ConsoleLogger>(optim::logger::Verbosity::WARN);
 
-    WolfeConfig config; // use defaults
-    SteepestDescent optimizer(SearchStrategy::STRONG_WOLFE, /*max_iters=*/10000, {}, logger);
-    optimizer.setConfig(config);
+    SteepestDescent optimizer(StepLengthMethod::STRONG_WOLFE, /*max_iters=*/10000, {}, logger);
 
     auto result = optimizer.optimize(f, x0);
     EXPECT_TRUE(result.converged);

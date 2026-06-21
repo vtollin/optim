@@ -1,9 +1,11 @@
 #pragma once
-#include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/OptimizerUtility.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
 #include <Eigen/Dense>
 
-namespace optim { class DifferentiableFunction; }
+namespace optim {
+class DifferentiableFunction;
+}
 
 namespace optim::linesearch {
 struct WolfeConfig {
@@ -18,7 +20,7 @@ struct WolfeConfig {
 
 class StrongWolfe : public StepLengthPolicy {
   public:
-    explicit StrongWolfe(const WolfeConfig &config,
+    explicit StrongWolfe(const WolfeConfig &config = WolfeConfig{},
                          std::shared_ptr<optim::logger::Logger> logger = nullptr);
 
     double computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
