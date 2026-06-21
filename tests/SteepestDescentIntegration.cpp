@@ -140,9 +140,8 @@ TEST(SteepestDescentIntegration, WoodWolfe) {
     Eigen::Vector4d x0;
     x0 << -3.0, -1.0, -3.0, -1.0;
 
-    auto logger = std::make_shared<optim::logger::ConsoleLogger>(optim::logger::Verbosity::WARN);
-
-    SteepestDescent optimizer(StepLengthMethod::STRONG_WOLFE, /*max_iters=*/10000, {}, logger);
+    optim::logger::ConsoleLogger logger(optim::logger::Verbosity::WARN);
+    SteepestDescent optimizer(StepLengthMethod::STRONG_WOLFE, /*max_iters=*/10000, {}, &logger);
 
     auto result = optimizer.optimize(f, x0);
     EXPECT_TRUE(result.converged);

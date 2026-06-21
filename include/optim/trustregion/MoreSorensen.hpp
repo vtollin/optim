@@ -17,7 +17,7 @@ class MoreSorensen : public TrustRegionBase {
   public:
     MoreSorensen(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
                  double delta_max, double eta, BMatrixConfig cfg,
-                 std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                 optim::logger::Logger *logger = nullptr);
     ~MoreSorensen();
 
     optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,

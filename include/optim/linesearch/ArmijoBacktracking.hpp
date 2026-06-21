@@ -18,7 +18,7 @@ struct ArmijoConfig {
 class ArmijoBacktracking : public StepLengthPolicy {
   public:
     explicit ArmijoBacktracking(const ArmijoConfig &config = ArmijoConfig{},
-                                std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                                optim::logger::Logger *logger = nullptr);
 
     double computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
                        const Eigen::VectorXd &direction, const Eigen::VectorXd &gradient) override;

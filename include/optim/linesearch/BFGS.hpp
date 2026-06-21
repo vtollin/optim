@@ -21,11 +21,11 @@ class BFGS : public LineSearchBase<optim::DifferentiableFunction> {
     // However, convergence may be slower and the theoretical guarantees are weaker.
     explicit BFGS(StepLengthMethod method = StepLengthMethod::STRONG_WOLFE,
                   int max_iterations = 1000, optim::ConvergenceCriteria criteria = {},
-                  std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                  optim::logger::Logger *logger = nullptr);
 
     explicit BFGS(std::unique_ptr<StepLengthPolicy> policy, int max_iterations = 1000,
                   optim::ConvergenceCriteria criteria = {},
-                  std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                  optim::logger::Logger *logger = nullptr);
 
     optim::OptimizationResult optimize(const optim::DifferentiableFunction &f,
                                        const Eigen::VectorXd &x0) override;

@@ -9,7 +9,7 @@ using optim::OptimizationResult;
 using optim::TwiceDifferentiableFunction;
 
 Dogleg::Dogleg(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
-               double delta_max, double eta, std::shared_ptr<optim::logger::Logger> logger)
+               double delta_max, double eta, optim::logger::Logger *logger)
     : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta, logger) {
 }
 

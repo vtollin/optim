@@ -16,7 +16,7 @@ using optim::TwiceDifferentiableFunction;
 
 MoreSorensen::MoreSorensen(int max_iterations, optim::ConvergenceCriteria criteria,
                            double delta_init, double delta_max, double eta, BMatrixConfig cfg,
-                           std::shared_ptr<optim::logger::Logger> logger)
+                           optim::logger::Logger *logger)
     : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta, logger) {
     if (cfg == BMatrixConfig::EXACT) {
         b_handler_ = std::make_unique<ExactHessianHandler>();

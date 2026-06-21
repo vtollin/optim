@@ -11,12 +11,14 @@ using namespace optim::linesearch;
 template <typename FuncType>
 LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_length_policy,
                                          int max_iterations, optim::ConvergenceCriteria criteria,
-                                         std::shared_ptr<optim::logger::Logger> logger)
-    : OptimizerBase(max_iterations, criteria, logger), step_length_policy_(std::move(step_length_policy)) {
+                                         optim::logger::Logger *logger)
+    : OptimizerBase(max_iterations, criteria, logger)
+    , step_length_policy_(std::move(step_length_policy)) {
+    step_length_policy_->setLogger(logger);
 }
 
 template <typename FuncType>
-void LineSearchBase<FuncType>::setLogger(std::shared_ptr<optim::logger::Logger> logger) {
+void LineSearchBase<FuncType>::setLogger(optim::logger::Logger *logger) {
     OptimizerBase::setLogger(logger);
     step_length_policy_->setLogger(logger);
 }

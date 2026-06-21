@@ -19,11 +19,11 @@ class Newton : public LineSearchBase<optim::TwiceDifferentiableFunction> {
   public:
     explicit Newton(StepLengthMethod method = StepLengthMethod::ARMIJO, int max_iterations = 1000,
                     optim::ConvergenceCriteria criteria = {},
-                    std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                    optim::logger::Logger *logger = nullptr);
 
     explicit Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations = 1000,
                     optim::ConvergenceCriteria criteria = {},
-                    std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                    optim::logger::Logger *logger = nullptr);
 
     optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
                                        const Eigen::VectorXd &x0) override;

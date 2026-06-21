@@ -15,11 +15,11 @@ class SteepestDescent : public LineSearchBase<optim::DifferentiableFunction> {
   public:
     explicit SteepestDescent(StepLengthMethod method = StepLengthMethod::ARMIJO,
                               int max_iterations = 1000, optim::ConvergenceCriteria criteria = {},
-                              std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                              optim::logger::Logger *logger = nullptr);
 
     explicit SteepestDescent(std::unique_ptr<StepLengthPolicy> policy, int max_iterations = 1000,
                               optim::ConvergenceCriteria criteria = {},
-                              std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                              optim::logger::Logger *logger = nullptr);
 
     optim::OptimizationResult optimize(const optim::DifferentiableFunction &f,
                                        const Eigen::VectorXd &x) override;

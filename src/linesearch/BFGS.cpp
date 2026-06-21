@@ -14,12 +14,12 @@ using optim::DifferentiableFunction;
 using optim::OptimizationResult;
 
 BFGS::BFGS(StepLengthMethod method, int max_iterations, optim::ConvergenceCriteria criteria,
-           std::shared_ptr<optim::logger::Logger> logger)
+           optim::logger::Logger *logger)
     : BFGS(makeStepLengthPolicy(method), max_iterations, criteria, logger) {
 }
 
 BFGS::BFGS(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
-           optim::ConvergenceCriteria criteria, std::shared_ptr<optim::logger::Logger> logger)
+           optim::ConvergenceCriteria criteria, optim::logger::Logger *logger)
     : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[BFGS] max_iterations must be positive.");

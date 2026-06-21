@@ -1,6 +1,6 @@
 #pragma once
-#include "optim/OptimizerBase.hpp"
 #include "optim/OptimizationResult.hpp"
+#include "optim/OptimizerBase.hpp"
 #include "optim/trustregion/QuadraticModel.hpp"
 #include <Eigen/Dense>
 #include <stdexcept>
@@ -9,7 +9,9 @@ namespace optim::logger {
 class Logger;
 }
 
-namespace optim { class TwiceDifferentiableFunction; }
+namespace optim {
+class TwiceDifferentiableFunction;
+}
 
 namespace optim::trustregion {
 
@@ -30,7 +32,7 @@ class TrustRegionBase : public optim::OptimizerBase {
     double eta_;
 
     TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
-                    double delta_max, double eta, std::shared_ptr<optim::logger::Logger> logger)
+                    double delta_max, double eta, optim::logger::Logger *logger)
         : delta_(delta_init)
         , delta_max_(delta_max)
         , eta_(eta)
@@ -46,8 +48,7 @@ class TrustRegionBase : public optim::OptimizerBase {
         }
     };
 
-    UpdateResult update(const optim::TwiceDifferentiableFunction &f,
-                        const QuadraticModel &m,
+    UpdateResult update(const optim::TwiceDifferentiableFunction &f, const QuadraticModel &m,
                         const Eigen::VectorXd &x, const Eigen::VectorXd &step);
 };
 } // namespace optim::trustregion

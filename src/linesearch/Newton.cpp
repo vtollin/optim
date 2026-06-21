@@ -16,11 +16,11 @@ using optim::TwiceDifferentiableFunction;
 using optim::OptimizationResult;
 
 Newton::Newton(StepLengthMethod method, int max_iterations, optim::ConvergenceCriteria criteria,
-               std::shared_ptr<optim::logger::Logger> logger)
+               optim::logger::Logger *logger)
     : Newton(makeStepLengthPolicy(method), max_iterations, criteria, logger) {}
 
 Newton::Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
-               optim::ConvergenceCriteria criteria, std::shared_ptr<optim::logger::Logger> logger)
+               optim::ConvergenceCriteria criteria, optim::logger::Logger *logger)
     : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[Newton] Max iterations must be positive.");

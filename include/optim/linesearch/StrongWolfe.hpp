@@ -21,7 +21,7 @@ struct WolfeConfig {
 class StrongWolfe : public StepLengthPolicy {
   public:
     explicit StrongWolfe(const WolfeConfig &config = WolfeConfig{},
-                         std::shared_ptr<optim::logger::Logger> logger = nullptr);
+                         optim::logger::Logger *logger = nullptr);
 
     double computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
                        const Eigen::VectorXd &direction, const Eigen::VectorXd &gradient) override;

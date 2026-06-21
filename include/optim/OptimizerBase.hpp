@@ -16,13 +16,17 @@ struct ConvergenceCriteria {
 class OptimizerBase {
   public:
     virtual ~OptimizerBase() = default;
-    virtual void setLogger(std::shared_ptr<optim::logger::Logger> logger);
+    // Sets the logger used for iteration tracing. Does NOT take ownership:
+    // the caller owns the logger and must keep it alive for as long as this
+    // optimizer (or any optimizer sharing it) is in use. Pass nullptr to
+    // disable logging.
+    virtual void setLogger(optim::logger::Logger *logger);
 
   protected:
-    OptimizerBase(int max_iterations, ConvergenceCriteria criteria,
-                  std::shared_ptr<optim::logger::Logger> logger);
+    // 'logger' is observed, not owned. See setLogger for the lifetime contract.
+    OptimizerBase(int max_iterations, ConvergenceCriteria criteria, optim::logger::Logger *logger);
     int max_iterations_;
     ConvergenceCriteria criteria_;
-    std::shared_ptr<optim::logger::Logger> logger_;
+    optim::logger::Logger *logger_;
 };
 } // namespace optim

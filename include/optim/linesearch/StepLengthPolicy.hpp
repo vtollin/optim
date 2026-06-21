@@ -18,10 +18,10 @@ class StepLengthPolicy {
                                const Eigen::VectorXd &direction,
                                const Eigen::VectorXd &gradient) = 0;
 
-    void setLogger(std::shared_ptr<optim::logger::Logger> logger) { logger_ = logger; }
+    void setLogger(optim::logger::Logger *logger) { logger_ = logger; }
 
   protected:
-    explicit StepLengthPolicy(std::shared_ptr<optim::logger::Logger> logger) : logger_(logger) {}
-    std::shared_ptr<optim::logger::Logger> logger_;
+    explicit StepLengthPolicy(optim::logger::Logger *logger) : logger_(logger) {}
+    optim::logger::Logger *logger_;
 };
 } // namespace optim::linesearch
