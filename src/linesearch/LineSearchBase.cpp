@@ -18,6 +18,57 @@ LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_
 }
 
 template <typename FuncType>
+optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
+                                                             const Eigen::VectorXd &x0) {
+    if (x0.size() != f.sourceDimension()) {
+        throw std::invalid_argument("[LineSearch] x0 not in source of objective.");
+    }
+
+    Eigen::VectorXd x = x0;
+    Eigen::VectorXd grad = f.gradient(x); // carried as loop state
+    bool converged = false;
+    std::string msg = "Failed to converge in specified iterations.";
+    int k = 0;
+    resetState(f.sourceDimension());
+
+    for (; k < max_iterations_; ++k) {
+        if (grad.norm() < criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance
+            converged = true;
+            msg = "Converged: gradient norm fell below tolerance.";
+            break;
+        }
+
+        Eigen::VectorXd direction = computeDirection(f, x, grad); // HOOK
+        double alpha = step_length_policy_->computeStep(f, x, direction, grad);
+        if (alpha == 0.0) {
+            msg = "Search strategy returned 0 step.";
+            break;
+        }
+
+        Eigen::VectorXd step = alpha * direction;
+        double f0 = f.evaluate(x);
+
+        x += step;
+        if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
+            converged = true;
+            msg = "Converged: step size fell below tolerance.";
+            break;
+        }
+        double f1 = f.evaluate(x);
+        if (std::abs(f1 - f0) < criteria_.f_tol * (std::abs(f0) + 1.0)) {
+            converged = true;
+            msg = "Converged: objective change fell below tolerance.";
+            break;
+        }
+
+        Eigen::VectorXd grad_new = f.gradient(x);
+        updateState(step, grad_new - grad); // HOOK (BFGS only)
+        grad = grad_new;
+    }
+    return OptimizationResult{x, f.evaluate(x), k, converged, msg};
+}
+
+template <typename FuncType>
 void LineSearchBase<FuncType>::setLogger(optim::logger::Logger *logger) {
     OptimizerBase::setLogger(logger);
     step_length_policy_->setLogger(logger);

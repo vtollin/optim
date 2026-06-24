@@ -29,65 +29,24 @@ BFGS::BFGS(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
     }
 }
 
-// Maintains a quasi-Newton approximation to the Hessian updated each iteration via the BFGS
-// rank-2 formula. Powell damping in updateBFGS enforces the curvature condition when the line
-// search does not (e.g. Armijo). Strong Wolfe is the recommended default. N&W Section 6.1, p.
-// 136.
-OptimizationResult BFGS::optimize(const DifferentiableFunction &f, const Eigen::VectorXd &x0) {
-    int n = f.sourceDimension();
-    if (x0.size() != n) {
-        throw std::invalid_argument(
-            "[BFGS] Initial vector is not in the source of objective function.");
-    }
+Eigen::VectorXd BFGS::computeDirection(const DifferentiableFunction &f, const Eigen::VectorXd &x,
+                                       const Eigen::VectorXd &grad) {
+    return -H_ * grad;
+}
 
-    Eigen::VectorXd x = x0;
-    bool converged = false;
-    std::string msg = "Failed to converge in specified iterations.";
-    int k = 0;
-    Eigen::MatrixXd H = Eigen::MatrixXd::Identity(n, n);
-    Eigen::VectorXd grad = f.gradient(x);
-    for (; k < max_iterations_; ++k) {
-        if (grad.norm() <
-            criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance with absolute floor
-            converged = true;
-            msg = "Converged: gradient norm fell below tolerance.";
-            break;
-        }
-        Eigen::VectorXd direction = -H * grad;
-        double alpha = step_length_policy_->computeStep(f, x, direction, grad);
-        if (alpha == 0.0) {
-            msg = "Search strategy returned 0 step.";
-            break;
-        }
-        Eigen::VectorXd step = alpha * direction;
-        double f0 = f.evaluate(x);
-        if (logger_ && logger_->shouldLog(optim::logger::Verbosity::INFO)) {
-            logger_->logIteration(optim::logger::IterationInfo{k, x, grad, step, f0});
-        }
-        x += step;
-        if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
-            converged = true;
-            msg = "Converged: step size fell below tolerance.";
-            break;
-        }
-        double f1 = f.evaluate(x);
-        if (std::abs(f1 - f0) < criteria_.f_tol * (std::abs(f0) + 1.0)) {
-            converged = true;
-            msg = "Converged: objective change fell below tolerance.";
-            break;
-        }
-        Eigen::VectorXd next_grad = f.gradient(x);
-        updateBFGS(H, step, next_grad - grad);
-        grad = next_grad;
-    }
-    return OptimizationResult{x, f.evaluate(x), k, converged, msg};
+void BFGS::resetState(int n) {
+    H_ = Eigen::MatrixXd::Identity(n, n);
+}
+
+void BFGS::updateState(const Eigen::VectorXd &s, const Eigen::VectorXd &y) {
+    updateBFGS(s, y);
 }
 
 // Applies the BFGS rank-2 update to the inverse Hessian approximation H_k. Powell damping
 // blends y_k toward H_k s when the curvature condition is weak, keeping H_k positive definite.
 // Adapted from N&W Algorithm 18.2, p. 537.
-void BFGS::updateBFGS(Eigen::MatrixXd &H, const Eigen::VectorXd &s, const Eigen::VectorXd &y_k) {
-    Eigen::VectorXd Hs = H * s;
+void BFGS::updateBFGS(const Eigen::VectorXd &s, const Eigen::VectorXd &y_k) {
+    Eigen::VectorXd Hs = H_ * s;
     double sHs = s.dot(Hs);
     double sy_k = s.dot(y_k);
     Eigen::VectorXd y;
@@ -100,9 +59,9 @@ void BFGS::updateBFGS(Eigen::MatrixXd &H, const Eigen::VectorXd &s, const Eigen:
 
     // H_{k+1} = (I - rho s y^T) H_k (I - rho y s^T) + rho s s^T
     double rho = 1.0 / s.dot(y);
-    Eigen::VectorXd Hy = H * y;
+    Eigen::VectorXd Hy = H_ * y;
     double c = 1.0 + rho * y.dot(Hy);
-    H.noalias() -= rho * Hy * s.transpose();
-    H.noalias() -= rho * s * Hy.transpose();
-    H.noalias() += rho * c * s * s.transpose();
+    H_.noalias() -= rho * Hy * s.transpose();
+    H_.noalias() -= rho * s * Hy.transpose();
+    H_.noalias() += rho * c * s * s.transpose();
 }

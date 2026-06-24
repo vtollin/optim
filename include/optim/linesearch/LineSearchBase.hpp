@@ -25,10 +25,16 @@ template <typename FuncType> class LineSearchBase : public optim::OptimizerBase 
     // ownership contract.
     void setLogger(optim::logger::Logger *logger) override;
 
-    virtual optim::OptimizationResult optimize(const FuncType &f, const Eigen::VectorXd &x0) = 0;
+    optim::OptimizationResult optimize(const FuncType &f, const Eigen::VectorXd &x0);
 
   protected:
     std::unique_ptr<StepLengthPolicy> step_length_policy_;
+
+  private:
+    virtual Eigen::VectorXd computeDirection(const FuncType &f, const Eigen::VectorXd &x,
+                                             const Eigen::VectorXd &grad) = 0;
+    virtual void resetState(int n) {}
+    virtual void updateState(const Eigen::VectorXd &s, const Eigen::VectorXd &y) {}
 };
 
 extern template class LineSearchBase<optim::DifferentiableFunction>;

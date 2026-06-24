@@ -27,10 +27,12 @@ class BFGS : public LineSearchBase<optim::DifferentiableFunction> {
                   optim::ConvergenceCriteria criteria = {},
                   optim::logger::Logger *logger = nullptr);
 
-    optim::OptimizationResult optimize(const optim::DifferentiableFunction &f,
-                                       const Eigen::VectorXd &x0) override;
-
   private:
-    void updateBFGS(Eigen::MatrixXd &H, const Eigen::VectorXd &s, const Eigen::VectorXd &y_k);
+    Eigen::VectorXd computeDirection(const DifferentiableFunction &f, const Eigen::VectorXd &x,
+                                     const Eigen::VectorXd &grad) override;
+    void resetState(int n) override;
+    void updateState(const Eigen::VectorXd &s, const Eigen::VectorXd &y) override;
+    void updateBFGS(const Eigen::VectorXd &s, const Eigen::VectorXd &y_k);
+    Eigen::MatrixXd H_; // BFGS matrix state
 };
 } // namespace optim::linesearch

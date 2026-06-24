@@ -1,14 +1,16 @@
 #pragma once
+#include "optim/OptimizationResult.hpp"
 #include "optim/linesearch/LineSearchBase.hpp"
 #include "optim/linesearch/StepLengthMethod.hpp"
-#include "optim/OptimizationResult.hpp"
 #include <Eigen/Dense>
 
 namespace optim::logger {
 class Logger;
 }
 
-namespace optim { class TwiceDifferentiableFunction; }
+namespace optim {
+class TwiceDifferentiableFunction;
+}
 
 namespace optim::linesearch {
 struct CholeskyFactor {
@@ -25,10 +27,9 @@ class Newton : public LineSearchBase<optim::TwiceDifferentiableFunction> {
                     optim::ConvergenceCriteria criteria = {},
                     optim::logger::Logger *logger = nullptr);
 
-    optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
-                                       const Eigen::VectorXd &x0) override;
-
   private:
+    Eigen::VectorXd computeDirection(const TwiceDifferentiableFunction &f, const Eigen::VectorXd &x,
+                                     const Eigen::VectorXd &grad) override;
     CholeskyFactor modifiedCholesky(const Eigen::MatrixXd &hessian);
 };
 } // namespace optim::linesearch

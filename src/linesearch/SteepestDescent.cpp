@@ -1,24 +1,23 @@
 #include "optim/linesearch/SteepestDescent.hpp"
+#include "optim/Functions.hpp"
+#include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/Functions.hpp"
-#include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
 #include <string>
 
 using namespace optim::linesearch;
-using optim::OptimizationResult;
 using optim::DifferentiableFunction;
+using optim::OptimizationResult;
 
 SteepestDescent::SteepestDescent(StepLengthMethod method, int max_iterations,
-                                 optim::ConvergenceCriteria criteria,
-                                 optim::logger::Logger *logger)
-    : SteepestDescent(makeStepLengthPolicy(method), max_iterations, criteria, logger) {}
+                                 optim::ConvergenceCriteria criteria, optim::logger::Logger *logger)
+    : SteepestDescent(makeStepLengthPolicy(method), max_iterations, criteria, logger) {
+}
 
 SteepestDescent::SteepestDescent(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
-                                 optim::ConvergenceCriteria criteria,
-                                 optim::logger::Logger *logger)
+                                 optim::ConvergenceCriteria criteria, optim::logger::Logger *logger)
     : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[SteepestDescent] Max iterations must be positive.");
@@ -28,49 +27,9 @@ SteepestDescent::SteepestDescent(std::unique_ptr<StepLengthPolicy> policy, int m
     }
 }
 
-// Iterates from x0 using the negative gradient as the search direction, delegating step
-// length selection to the configured line search strategy. N&W Section 3.1, p. 30.
-OptimizationResult SteepestDescent::optimize(const DifferentiableFunction &f,
-                                             const Eigen::VectorXd &x0) {
-    if (x0.size() != f.sourceDimension()) {
-        throw std::invalid_argument(
-            "[SteepestDescent] Initial vector is not in the source of objective function.");
-    }
-
-    Eigen::VectorXd x = x0;
-    bool converged = false;
-    std::string msg = "Failed to converge in specified iterations.";
-    int k = 0;
-    for (; k < max_iterations_; ++k) {
-        Eigen::VectorXd grad = f.gradient(x);
-        if (grad.norm() < criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance with absolute floor
-            converged = true;
-            msg = "Converged: gradient norm fell below tolerance.";
-            break;
-        }
-        Eigen::VectorXd direction = -grad;
-        double alpha = step_length_policy_->computeStep(f, x, direction, grad);
-        if (alpha == 0.0) {
-            msg = "Search strategy returned 0 step.";
-            break;
-        }
-        Eigen::VectorXd step = alpha * direction;
-        double f0 = f.evaluate(x);
-        if (logger_ && logger_->shouldLog(optim::logger::Verbosity::INFO)) {
-            logger_->logIteration(optim::logger::IterationInfo{k, x, grad, step, f0});
-        }
-        x += step;
-        if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
-            converged = true;
-            msg = "Converged: step size fell below tolerance.";
-            break;
-        }
-        double f1 = f.evaluate(x);
-        if (std::abs(f1 - f0) < criteria_.f_tol * (std::abs(f0) + 1.0)) {
-            converged = true;
-            msg = "Converged: objective change fell below tolerance.";
-            break;
-        }
-    }
-    return OptimizationResult{x, f.evaluate(x), k, converged, msg};
+// Search direction is simply negative gradient. N&W Section 3.1, p. 30.
+Eigen::VectorXd SteepestDescent::computeDirection(const DifferentiableFunction &f,
+                                                  const Eigen::VectorXd &x,
+                                                  const Eigen::VectorXd &grad) {
+    return -grad;
 }

@@ -1,23 +1,24 @@
 #include "optim/linesearch/Newton.hpp"
+#include "optim/Functions.hpp"
+#include "optim/OptimizationResult.hpp"
+#include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/LineSearchBase.hpp"
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/logger/Logger.hpp"
-#include "optim/Functions.hpp"
-#include "optim/OptimizationResult.hpp"
-#include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <stdexcept>
 #include <string>
 
 using namespace optim::linesearch;
-using optim::TwiceDifferentiableFunction;
 using optim::OptimizationResult;
+using optim::TwiceDifferentiableFunction;
 
 Newton::Newton(StepLengthMethod method, int max_iterations, optim::ConvergenceCriteria criteria,
                optim::logger::Logger *logger)
-    : Newton(makeStepLengthPolicy(method), max_iterations, criteria, logger) {}
+    : Newton(makeStepLengthPolicy(method), max_iterations, criteria, logger) {
+}
 
 Newton::Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
                optim::ConvergenceCriteria criteria, optim::logger::Logger *logger)
@@ -30,59 +31,13 @@ Newton::Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
     }
 }
 
-// Computes search directions by solving the Newton system H*p = -g, regularizing the Hessian
-// via modified Cholesky to guarantee a descent direction. Delegates step length to the
-// configured line search strategy. N&W Section 3.4, pp. 48-49.
-OptimizationResult Newton::optimize(const TwiceDifferentiableFunction &f,
-                                    const Eigen::VectorXd &x0) {
-    if (x0.size() != f.sourceDimension()) {
-        throw std::invalid_argument(
-            "[Newton] Initial vector is not in the source of objective function.");
-    }
-
-    Eigen::VectorXd x = x0;
-    bool converged = false;
-    std::string msg = "Failed to converge in specified iterations.";
-    int k = 0;
-    for (; k < max_iterations_; ++k) {
-        Eigen::VectorXd grad = f.gradient(x);
-        if (grad.norm() <
-            criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance with absolute floor
-            converged = true;
-            msg = "Converged: gradient norm fell below tolerance.";
-            break;
-        }
-        Eigen::MatrixXd hess = f.hessian(x);
-        CholeskyFactor factor = modifiedCholesky(hess);
-        Eigen::VectorXd y = factor.L.triangularView<Eigen::Lower>().solve(-grad); // Ly = -g
-        Eigen::VectorXd z = y.array() / factor.d.array();                         // Dz = y
-        Eigen::VectorXd direction =
-            factor.L.triangularView<Eigen::Lower>().transpose().solve(z); // L^Tp = z
-
-        double alpha = step_length_policy_->computeStep(f, x, direction, grad);
-        if (alpha == 0.0) {
-            msg = "Search strategy returned 0 step.";
-            break;
-        }
-        Eigen::VectorXd step = alpha * direction;
-        double f0 = f.evaluate(x);
-        if (logger_ && logger_->shouldLog(optim::logger::Verbosity::INFO)) {
-            logger_->logIteration(optim::logger::IterationInfo{k, x, grad, step, f0});
-        }
-        x += step;
-        if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
-            converged = true;
-            msg = "Converged: step size fell below tolerance.";
-            break;
-        }
-        double f1 = f.evaluate(x);
-        if (std::abs(f1 - f0) < criteria_.f_tol * (std::abs(f0) + 1.0)) {
-            converged = true;
-            msg = "Converged: objective change fell below tolerance.";
-            break;
-        }
-    }
-    return OptimizationResult{x, f.evaluate(x), k, converged, msg};
+// Computes search direction by solving the Cholesky factorized system LDL^T y = -g in three steps.
+Eigen::VectorXd Newton::computeDirection(const TwiceDifferentiableFunction &f,
+                                         const Eigen::VectorXd &x, const Eigen::VectorXd &grad) {
+    CholeskyFactor factor = modifiedCholesky(f.hessian(x));
+    Eigen::VectorXd y = factor.L.triangularView<Eigen::Lower>().solve(-grad); // Ly = -g
+    Eigen::VectorXd z = y.array() / factor.d.array();                         // Dz = y
+    return factor.L.triangularView<Eigen::Lower>().transpose().solve(z);      // L^Tp = z
 }
 
 // Computes a modified LDL^T factorization where each diagonal d(j) is bumped up as needed to
