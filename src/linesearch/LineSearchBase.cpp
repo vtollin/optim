@@ -31,6 +31,7 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
     int k = 0;
     resetState(f.sourceDimension());
 
+    notifyStart();
     for (; k < max_iterations_; ++k) {
         if (grad.norm() < criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance
             converged = true;
@@ -47,7 +48,7 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
 
         Eigen::VectorXd step = alpha * direction;
         double f0 = f.evaluate(x);
-
+        notifyIteration({k, f0, x, grad, step}); // rho/delta/accepted default to nullopt
         x += step;
         if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
             converged = true;
@@ -65,6 +66,7 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
         updateState(step, grad_new - grad); // HOOK (BFGS only)
         grad = grad_new;
     }
+    notifyFinish();
     return OptimizationResult{x, f.evaluate(x), k, converged, msg};
 }
 

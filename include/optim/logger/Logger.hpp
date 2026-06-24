@@ -4,14 +4,6 @@
 
 namespace optim::logger {
 enum class Verbosity { QUIET, ERROR, WARN, INFO };
-struct IterationInfo {
-    int iter;
-    Eigen::VectorXd x, grad, step;
-    double fval;
-    double rho = std::nan("");
-    bool accepted = false;
-    double delta = std::nan("");
-};
 
 class Logger {
   public:
