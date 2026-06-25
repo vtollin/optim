@@ -1,27 +1,24 @@
 #include "optim/logger/Logger.hpp"
+#include <ostream>
 #include <string>
 
 using namespace optim::logger;
 
-Logger::Logger(Verbosity v) : verbosity_(v) {
+Logger::Logger(Verbosity v, std::ostream &os) : verbosity_(v), os_(os) {
 }
 
-Verbosity Logger::getVerbosity() const {
-    return verbosity_;
-}
-
-void Logger::setVerbosity(Verbosity level) {
-    verbosity_ = level;
+void Logger::log(Verbosity level, const std::string &msg) const {
+    if (level <= verbosity_) {
+        os_ << '[' << toString(level) << ']' << msg << '\n';
+    }
 }
 
 std::string Logger::toString(Verbosity level) const {
     switch (level) {
-    case Verbosity::ERROR:
-        return "ERROR";
     case Verbosity::WARN:
         return "WARN";
-    case Verbosity::INFO:
-        return "INFO";
+    case Verbosity::DEBUG:
+        return "DEBUG";
     default:
         return "";
     }

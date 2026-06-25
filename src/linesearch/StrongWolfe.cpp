@@ -1,8 +1,8 @@
 #include "optim/linesearch/StrongWolfe.hpp"
-#include "optim/linesearch/Interpolation.hpp"
-#include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizerUtility.hpp"
+#include "optim/linesearch/Interpolation.hpp"
+#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <limits>
@@ -56,7 +56,8 @@ double StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen::Ve
             phi > phi_prev) { // bracket found: Armijo failed or phi rose
             return zoom(alpha_prev, alpha, f, x, direction, phi0, phi_prime0);
         }
-        double phi_prime = optim::utility::directionalDerivative(f, x + alpha * direction, direction);
+        double phi_prime =
+            optim::utility::directionalDerivative(f, x + alpha * direction, direction);
         if (std::abs(phi_prime) <=
             -config_.c2 * phi_prime0) { // strong Wolfe conditions satisfied (N&W eq. 3.7)
             return alpha;
@@ -66,9 +67,14 @@ double StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen::Ve
         }
         double alpha_next = alpha * config_.rho;
         if (alpha_next > config_.alpha_max) {
-            if (logger_ && logger_->shouldLog(optim::logger::Verbosity::WARN)) {
-                logger_->log("[StrongWolfe] Warning: Alpha exceeded alpha_max: returning best step "
-                             "found.");
+            if (logger_) {
+                logger_->log(logger::Verbosity::WARN,
+                             "[StrongWolfe] Step length reached the maximum (" +
+                                 std::to_string(config_.alpha_max) +
+                                 ") during bracketing without satisfying the Wolfe conditions; "
+                                 "returning best step found "
+                                 "(alpha = " +
+                                 std::to_string(best_alpha) + ").");
             }
             break;
         }
@@ -79,13 +85,19 @@ double StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen::Ve
             best_alpha = alpha_next;
             best_phi = phi;
         }
-        double tol = optim::utility::sqrt_epsilon * (std::max(std::abs(phi), std::abs(phi_prev)) + 1.0);
+        double tol =
+            optim::utility::sqrt_epsilon * (std::max(std::abs(phi), std::abs(phi_prev)) + 1.0);
         if (std::abs(phi - phi_prev) < tol) { // relative tolerance with absolute floor
             ++stall_counter;
             if (stall_counter == 5) {
-                if (logger_ && logger_->shouldLog(optim::logger::Verbosity::WARN)) {
-                    logger_->log("[StrongWolfe] Warning: Change in phi fell below machine "
-                                 "precision for 5 iterations. Returning best step found.");
+                if (logger_) {
+                    logger_->log(logger::Verbosity::WARN,
+                                 "[StrongWolfe] Change in phi stalled below tolerance (" +
+                                     std::to_string(tol) +
+                                     ") for 5 consecutive iterations during bracketing without "
+                                     "satisfying the Wolfe "
+                                     "conditions; returning best step found (alpha = " +
+                                     std::to_string(best_alpha) + ").");
                 }
                 break;
             }
@@ -105,8 +117,10 @@ double StrongWolfe::zoom(double alpha_lo, double alpha_hi, const DifferentiableF
                          double phi_prime0) {
     double phi_lo = f.evaluate(x + alpha_lo * direction);
     double phi_hi = f.evaluate(x + alpha_hi * direction);
-    double phi_prime_lo = optim::utility::directionalDerivative(f, x + alpha_lo * direction, direction);
-    double phi_prime_hi = optim::utility::directionalDerivative(f, x + alpha_hi * direction, direction);
+    double phi_prime_lo =
+        optim::utility::directionalDerivative(f, x + alpha_lo * direction, direction);
+    double phi_prime_hi =
+        optim::utility::directionalDerivative(f, x + alpha_hi * direction, direction);
     for (int i = 0; i < config_.zoom_max_iters; ++i) {
         double alpha = interpolation::cubicHermiteMinimizer(alpha_lo, alpha_hi, phi_lo, phi_hi,
                                                             phi_prime_lo, phi_prime_hi);
@@ -122,9 +136,11 @@ double StrongWolfe::zoom(double alpha_lo, double alpha_hi, const DifferentiableF
             phi >= phi_lo) { // Armijo failed or phi worsened: update hi
             alpha_hi = alpha;
             phi_hi = phi;
-            phi_prime_hi = optim::utility::directionalDerivative(f, x + alpha * direction, direction);
+            phi_prime_hi =
+                optim::utility::directionalDerivative(f, x + alpha * direction, direction);
         } else {
-            double phi_prime = optim::utility::directionalDerivative(f, x + alpha * direction, direction);
+            double phi_prime =
+                optim::utility::directionalDerivative(f, x + alpha * direction, direction);
             if (std::abs(phi_prime) <=
                 -config_.c2 * phi_prime0) { // strong Wolfe conditions satisfied (N&W eq. 3.7)
                 return alpha;
@@ -141,11 +157,24 @@ double StrongWolfe::zoom(double alpha_lo, double alpha_hi, const DifferentiableF
         }
         double tol = optim::utility::sqrt_epsilon * (std::max(alpha_lo, alpha_hi) + 1.0);
         if (std::abs(alpha_hi - alpha_lo) < tol) { // break if bracket falls below tolerance
-            break;
+            if (logger_) {
+                logger_->log(logger::Verbosity::WARN,
+                             "[StrongWolfe] zoom() bracket narrowed below tolerance (" +
+                                 std::to_string(tol) +
+                                 ") before satisfying the curvature condition; "
+                                 "returning alpha_lo (" +
+                                 std::to_string(alpha_lo) +
+                                 "), the best point satisfying sufficient decrease.");
+            }
+            return alpha_lo;
         }
     }
-    if (logger_ && logger_->shouldLog(optim::logger::Verbosity::WARN)) {
-        logger_->log("[StrongWolfe] Warning: zoom() failed to converge. Returning alpha_lo.");
+    if (logger_) {
+        logger_->log(
+            logger::Verbosity::WARN,
+            "[StrongWolfe] zoom() exhausted " + std::to_string(config_.zoom_max_iters) +
+                " iterations without satisfying the curvature condition; returning alpha_lo (" +
+                std::to_string(alpha_lo) + "), the best point satisfying sufficient decrease.");
     }
     return alpha_lo;
 }

@@ -1,25 +1,24 @@
 #pragma once
 #include <Eigen/Dense>
+#include <iostream>
 #include <string>
 
 namespace optim::logger {
-enum class Verbosity { QUIET, ERROR, WARN, INFO };
+enum class Verbosity { QUIET, WARN, DEBUG };
 
 class Logger {
   public:
-    Logger(Verbosity v);
-    virtual ~Logger() = default;
+    ~Logger() = default;
 
-    void setVerbosity(Verbosity level);
-    Verbosity getVerbosity() const;
+    explicit Logger(Verbosity v = Verbosity::WARN, std::ostream &os = std::cerr);
 
-    virtual void log(const std::string &message) = 0;
-    virtual void logIteration(const IterationInfo &it) = 0;
+    void log(Verbosity level, const std::string &msg) const;
 
-    bool shouldLog(Verbosity msgLevel) const { return msgLevel <= verbosity_; }
+    bool shouldLog(Verbosity level) const { return level <= verbosity_; }
 
-  protected:
+  private:
     std::string toString(Verbosity level) const;
     Verbosity verbosity_;
+    std::ostream &os_;
 };
 } // namespace optim::logger
