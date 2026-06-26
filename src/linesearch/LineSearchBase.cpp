@@ -39,14 +39,14 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
             break;
         }
 
-        Eigen::VectorXd direction = computeDirection(f, x, grad); // HOOK
-        double alpha = step_length_policy_->computeStep(f, x, direction, grad);
-        if (alpha == 0.0) {
-            msg = "Search strategy returned 0 step.";
+        Eigen::VectorXd direction = computeDirection(f, x, grad);
+        StepResult res = step_length_policy_->computeStep(f, x, direction, grad);
+        if (res.status == StepStatus::FAILURE) {
+            msg = "Line search failed to find an acceptable step.";
             break;
         }
 
-        Eigen::VectorXd step = alpha * direction;
+        Eigen::VectorXd step = res.alpha * direction;
         double f0 = f.evaluate(x);
         notifyIteration({k, f0, x, grad, step}); // rho/delta/accepted default to nullopt
         x += step;

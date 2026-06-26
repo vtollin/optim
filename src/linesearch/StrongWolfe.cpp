@@ -38,8 +38,9 @@ StrongWolfe::StrongWolfe(const WolfeConfig &config, optim::logger::Logger *logge
 // Expands alpha geometrically from alpha_init until the Strong Wolfe conditions are satisfied
 // directly or a bracket containing a Wolfe point is found. Delegates to zoom() once a bracket
 // is identified. N&W Algorithm 3.5, pp. 59-62.
-double StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen::VectorXd &x,
-                                const Eigen::VectorXd &direction, const Eigen::VectorXd &gradient) {
+StepResult StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen::VectorXd &x,
+                                    const Eigen::VectorXd &direction,
+                                    const Eigen::VectorXd &gradient) {
     double phi0 = f.evaluate(x);
     double phi_prime0 = gradient.dot(direction);
     double alpha = config_.alpha_init;
@@ -60,7 +61,7 @@ double StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen::Ve
             optim::utility::directionalDerivative(f, x + alpha * direction, direction);
         if (std::abs(phi_prime) <=
             -config_.c2 * phi_prime0) { // strong Wolfe conditions satisfied (N&W eq. 3.7)
-            return alpha;
+            return StepResult{alpha, StepStatus::SUCCESS};
         }
         if (phi_prime >= 0) { // phi' flipped positive: bracket straddles a minimum
             return zoom(alpha, alpha_prev, f, x, direction, phi0, phi_prime0);
@@ -106,15 +107,15 @@ double StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen::Ve
         }
         alpha = alpha_next;
     }
-    return best_alpha;
+    return StepResult{best_alpha, StepStatus::INADEQUATE};
 }
 
 // Refines a bracket [alpha_lo, alpha_hi] known to contain a Strong Wolfe point until one is
 // found or the bracket collapses to machine precision. Proposes each trial via Hermite cubic
 // interpolation with quadratic and bisection fallbacks. N&W Algorithm 3.6, pp. 60-61.
-double StrongWolfe::zoom(double alpha_lo, double alpha_hi, const DifferentiableFunction &f,
-                         const Eigen::VectorXd &x, const Eigen::VectorXd &direction, double phi0,
-                         double phi_prime0) {
+StepResult StrongWolfe::zoom(double alpha_lo, double alpha_hi, const DifferentiableFunction &f,
+                             const Eigen::VectorXd &x, const Eigen::VectorXd &direction,
+                             double phi0, double phi_prime0) {
     double phi_lo = f.evaluate(x + alpha_lo * direction);
     double phi_hi = f.evaluate(x + alpha_hi * direction);
     double phi_prime_lo =
@@ -143,7 +144,7 @@ double StrongWolfe::zoom(double alpha_lo, double alpha_hi, const DifferentiableF
                 optim::utility::directionalDerivative(f, x + alpha * direction, direction);
             if (std::abs(phi_prime) <=
                 -config_.c2 * phi_prime0) { // strong Wolfe conditions satisfied (N&W eq. 3.7)
-                return alpha;
+                return StepResult{alpha, StepStatus::SUCCESS};
             }
             if (phi_prime * (alpha_hi - alpha_lo) >=
                 0) { // phi' points toward hi: hi must move to old lo
@@ -166,7 +167,7 @@ double StrongWolfe::zoom(double alpha_lo, double alpha_hi, const DifferentiableF
                                  std::to_string(alpha_lo) +
                                  "), the best point satisfying sufficient decrease.");
             }
-            return alpha_lo;
+            return StepResult{alpha_lo, StepStatus::INADEQUATE};
         }
     }
     if (logger_) {
@@ -176,7 +177,7 @@ double StrongWolfe::zoom(double alpha_lo, double alpha_hi, const DifferentiableF
                 " iterations without satisfying the curvature condition; returning alpha_lo (" +
                 std::to_string(alpha_lo) + "), the best point satisfying sufficient decrease.");
     }
-    return alpha_lo;
+    return StepResult{alpha_lo, StepStatus::INADEQUATE};
 }
 
 bool StrongWolfe::isInvalid(double alpha_lo, double alpha_hi, double alpha) {

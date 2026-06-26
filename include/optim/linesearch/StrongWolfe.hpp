@@ -23,15 +23,16 @@ class StrongWolfe : public StepLengthPolicy {
     explicit StrongWolfe(const WolfeConfig &config = WolfeConfig{},
                          optim::logger::Logger *logger = nullptr);
 
-    double computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
-                       const Eigen::VectorXd &direction, const Eigen::VectorXd &gradient) override;
+    StepResult computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
+                           const Eigen::VectorXd &direction,
+                           const Eigen::VectorXd &gradient) override;
     void setConfig(const WolfeConfig &cfg);
 
   private:
     WolfeConfig config_;
-    double zoom(double alpha_lo, double alpha_hi, const optim::DifferentiableFunction &f,
-                const Eigen::VectorXd &x, const Eigen::VectorXd &direction, double phi0,
-                double phi_prime0);
+    StepResult zoom(double alpha_lo, double alpha_hi, const optim::DifferentiableFunction &f,
+                    const Eigen::VectorXd &x, const Eigen::VectorXd &direction, double phi0,
+                    double phi_prime0);
     bool isInvalid(double alpha_lo, double alpha_hi, double alpha);
 };
 } // namespace optim::linesearch

@@ -20,8 +20,9 @@ class ArmijoBacktracking : public StepLengthPolicy {
     explicit ArmijoBacktracking(const ArmijoConfig &config = ArmijoConfig{},
                                 optim::logger::Logger *logger = nullptr);
 
-    double computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
-                       const Eigen::VectorXd &direction, const Eigen::VectorXd &gradient) override;
+    StepResult computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
+                           const Eigen::VectorXd &direction,
+                           const Eigen::VectorXd &gradient) override;
     void setConfig(const ArmijoConfig &cfg);
 
   private:

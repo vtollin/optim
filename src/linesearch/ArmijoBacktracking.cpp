@@ -26,9 +26,10 @@ ArmijoBacktracking::ArmijoBacktracking(const ArmijoConfig &config, optim::logger
 // Shrinks alpha from alpha_init until the Armijo sufficient decrease condition is met.
 // Proposes each trial step via polynomial interpolation, falling back to bisection when
 // the interpolated step is not sufficiently conservative. N&W Algorithm 3.1, pp. 56-58.
-double ArmijoBacktracking::computeStep(const DifferentiableFunction &f, const Eigen::VectorXd &x,
-                                       const Eigen::VectorXd &direction,
-                                       const Eigen::VectorXd &gradient) {
+StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
+                                           const Eigen::VectorXd &x,
+                                           const Eigen::VectorXd &direction,
+                                           const Eigen::VectorXd &gradient) {
     double dir_deriv = gradient.dot(direction);
     if (dir_deriv >= 0.0) {
         throw std::runtime_error("[ArmijoBacktracking] direction is not a descent direction.");
@@ -43,7 +44,7 @@ double ArmijoBacktracking::computeStep(const DifferentiableFunction &f, const Ei
                              ") at ||x|| = " + std::to_string(x.norm()) +
                              "; the iterate may have entered a large-norm region. Returning.");
         }
-        return 0.0;
+        return StepResult{0.0, StepStatus::FAILURE};
     }
 
     double f_x = f.evaluate(x);
@@ -56,7 +57,7 @@ double ArmijoBacktracking::computeStep(const DifferentiableFunction &f, const Ei
     int k = 0;
     for (; k < config_.max_iters; ++k) {
         if (phi <= f_x + config_.c1 * alpha * dir_deriv) { // sufficient decrease (N&W eq. 3.4)
-            return alpha;
+            return StepResult{alpha, StepStatus::SUCCESS};
         }
         double new_alpha =
             nextTrialStep(alpha, phi, alpha_prev, phi_prev, f_x, dir_deriv, alpha_min);
@@ -96,7 +97,7 @@ double ArmijoBacktracking::computeStep(const DifferentiableFunction &f, const Ei
             break;
         }
     }
-    return best_alpha;
+    return StepResult{best_alpha, StepStatus::INADEQUATE};
 }
 
 // Quadratic interpolation on the first call; cubic once a previous iterate is available.
