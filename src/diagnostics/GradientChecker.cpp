@@ -17,11 +17,11 @@ GradientCheckResult gradient_check(const optim::DifferentiableFunction &f, const
     Eigen::Index worst_coord = -1;
     bool result = true;
     for (Eigen::Index i = 0; i < x.size(); ++i) {
-        double rel_perturbation = perturbation * std::max(std::abs(x(i)), 1.0);
+        double h = perturbation * std::max(std::abs(x(i)), 1.0);
         Eigen::VectorXd e_i = Eigen::VectorXd::Unit(x.size(), i);
-        double forward = f.evaluate(x + rel_perturbation * e_i);
-        double backward = f.evaluate(x - rel_perturbation * e_i);
-        double partial_i = (forward - backward) / (2 * rel_perturbation);
+        double forward = f.evaluate(x + h * e_i);
+        double backward = f.evaluate(x - h * e_i);
+        double partial_i = (forward - backward) / (2 * h);
         double abs_error = std::abs(analytic_grad(i) - partial_i);
         double rel_error = abs_error / std::max(std::abs(analytic_grad(i)), abs_tol);
 

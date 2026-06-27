@@ -15,5 +15,4 @@ struct GradientCheckResult {
 // pass/fail flag based on rel_tol / abs_tol.
 GradientCheckResult gradient_check(const DifferentiableFunction &f, const Eigen::VectorXd &x,
                                    double rel_tol = 1e-6, double abs_tol = 1e-8);
-
 } // namespace optim::diagnostics
