@@ -122,10 +122,6 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
             break;
         }
         UpdateResult result = update(f, m, x, step);
-        if (logger_ && logger_->getVerbosity() == optim::logger::Verbosity::INFO) {
-            logger_->logIteration(
-                {k, x, m.g, step, f.evaluate(x), result.rho, result.accepted, result.delta_old});
-        }
         if (result.accepted) {
             x = x + step;
             m.B = b_handler_->getB(f, x);
