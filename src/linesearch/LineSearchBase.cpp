@@ -76,5 +76,7 @@ void LineSearchBase<FuncType>::setLogger(optim::logger::Logger *logger) {
     step_length_policy_->setLogger(logger);
 }
 
+namespace optim::linesearch {
 template class LineSearchBase<optim::DifferentiableFunction>;
 template class LineSearchBase<optim::TwiceDifferentiableFunction>;
+} // namespace optim::linesearch
