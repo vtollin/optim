@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 
-using namespace optim::diagnostics;
+namespace optim::diagnostics {
 
 // Perturbation h ~ cbrt(u): central difference balances O(h^2) truncation error against O(u/h)
 // roundoff error, minimized at h proportional to u^(1/3). Computes numerical hessian in one pass,
@@ -56,3 +56,4 @@ HessianCheckResult hessian_check(const optim::TwiceDifferentiableFunction &f,
     return HessianCheckResult{result,        analytic_symmetric, max_abs_error,
                               max_rel_error, worst_row,          worst_col};
 }
+} // namespace optim::diagnostics
