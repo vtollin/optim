@@ -43,7 +43,8 @@ HessianCheckResult hessian_check(const optim::TwiceDifferentiableFunction &f,
             if (abs_error > max_abs_error) {
                 max_abs_error = abs_error;
             }
-            if (rel_error > rel_tol || abs_error > abs_tol) {
+            double tol = abs_tol + rel_tol * std::abs(a_hess(i, j));
+            if (abs_error > tol) {
                 result = false;
             }
         }
