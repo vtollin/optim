@@ -2,10 +2,10 @@
 #include "internal/BFGSHandler.hpp"
 #include "internal/BMatrixHandler.hpp"
 #include "internal/ExactHessianHandler.hpp"
-#include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerUtility.hpp"
+#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <stdexcept>

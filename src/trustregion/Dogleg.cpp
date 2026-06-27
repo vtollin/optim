@@ -1,6 +1,6 @@
 #include "optim/trustregion/Dogleg.hpp"
-#include "optim/logger/Logger.hpp"
 #include "optim/Functions.hpp"
+#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
 #include <string>
 
