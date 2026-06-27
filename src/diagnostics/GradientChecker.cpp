@@ -34,7 +34,6 @@ GradientCheckResult gradient_check(const optim::DifferentiableFunction &f, const
         }
         if (rel_error > rel_tol || abs_error > abs_tol) {
             result = false;
-            break;
         }
     }
     return GradientCheckResult{result, max_abs_error, max_rel_error, worst_coord};
