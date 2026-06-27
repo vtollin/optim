@@ -22,7 +22,7 @@ TEST(StrongWolfeUnit, Quad1D) {
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
 
-    double alpha = ls.computeStep(f, x0, dir, grad);
+    double alpha = ls.computeStep(f, x0, dir, grad).alpha;
     Eigen::VectorXd step = alpha * dir;
 
     EXPECT_EQ(step(0), -1.0);
@@ -47,7 +47,7 @@ TEST(StrongWolfeUnit, SimpleConvexQuad) {
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
 
-    double alpha = ls.computeStep(f, x0, dir, grad);
+    double alpha = ls.computeStep(f, x0, dir, grad).alpha;
     Eigen::VectorXd step = alpha * dir;
 
     EXPECT_EQ(step(0), -3.0);
@@ -73,7 +73,7 @@ TEST(StrongWolfeUnit, IllConditionedQuad) {
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
 
-    double alpha = ls.computeStep(f, x0, dir, grad);
+    double alpha = ls.computeStep(f, x0, dir, grad).alpha;
     Eigen::VectorXd step = alpha * dir;
 
     // zooms in when alpha does not satisfy sufficient decrease
@@ -112,7 +112,7 @@ TEST(StrongWolfeTest, SecondZoomCall) {
 
     EXPECT_TRUE(armijo);
     // run
-    double alpha = ls.computeStep(f, x0, dir, grad);
+    double alpha = ls.computeStep(f, x0, dir, grad).alpha;
     Eigen::VectorXd step = alpha * dir;
 
     //  Ensure it called zoom for alpha < 0.0999;

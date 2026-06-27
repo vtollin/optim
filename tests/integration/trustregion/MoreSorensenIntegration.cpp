@@ -3,7 +3,6 @@
 #include "Himmelblau.hpp"
 #include "Rosenbrock.hpp"
 #include "Wood.hpp"
-#include "optim/logger/ConsoleLogger.hpp"
 #include "optim/OptimizationResult.hpp"
 #include "optim/trustregion/MoreSorensen.hpp"
 #include <Eigen/Dense>

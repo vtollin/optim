@@ -19,7 +19,7 @@ TEST(ArmijoUnit, Quad1D) {
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
 
-    double alpha = ls.computeStep(f, x0, dir, grad);
+    double alpha = ls.computeStep(f, x0, dir, grad).alpha;
     Eigen::VectorXd step = alpha * dir;
 
     EXPECT_EQ(step(0), -1.0);
@@ -39,7 +39,7 @@ TEST(ArmijoUnit, SimpleConvexQuad) {
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
 
-    double alpha = ls.computeStep(f, x0, dir, grad);
+    double alpha = ls.computeStep(f, x0, dir, grad).alpha;
     Eigen::VectorXd step = alpha * dir;
 
     EXPECT_NEAR(step(0), -3.0, 1e-8);
@@ -62,6 +62,6 @@ TEST(ArmijoUnit, ErrorHandling) {
 
     EXPECT_THROW(ls.computeStep(f, x0, grad, grad), std::runtime_error);
 
-    double alpha = ls.computeStep(f, x0, -grad, grad);
+    double alpha = ls.computeStep(f, x0, -grad, grad).alpha;
     EXPECT_EQ(alpha, 0.0);
 }

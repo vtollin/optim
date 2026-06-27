@@ -4,9 +4,8 @@
 #include "Himmelblau.hpp"
 #include "Rosenbrock.hpp"
 #include "Wood.hpp"
-#include "optim/linesearch/Newton.hpp"
 #include "optim/linesearch/ArmijoBacktracking.hpp"
-#include "optim/logger/ConsoleLogger.hpp"
+#include "optim/linesearch/Newton.hpp"
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -28,7 +27,6 @@ TEST(NewtonIntegration, ConvexQuadArmijo) {
     EXPECT_TRUE(result.converged);
     EXPECT_NEAR(result.f_val, 0.0, 1e-9);
     EXPECT_NEAR(result.x_opt.norm(), 0.0, 1e-4);
-    std::cout << result.message << std::endl;
 }
 
 TEST(NewtonIntegration, RosenbrockArmijo) {
@@ -46,7 +44,6 @@ TEST(NewtonIntegration, RosenbrockArmijo) {
     EXPECT_LT(result.f_val, 1e-4);
     EXPECT_NEAR(result.x_opt(0), 1.0, 1e-2);
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-2);
-    std::cout << result.message << std::endl;
 }
 
 TEST(NewtonIntegration, HimmelblauArmijo) {
@@ -62,7 +59,6 @@ TEST(NewtonIntegration, HimmelblauArmijo) {
     EXPECT_LT(result.f_val, 1e-7);
     EXPECT_NEAR(result.x_opt(0), 3.0, 1e-5);
     EXPECT_NEAR(result.x_opt(1), 2.0, 1e-5);
-    std::cout << result.message << std::endl;
 }
 
 TEST(NewtonIntegration, BealeArmijo) {
@@ -78,7 +74,6 @@ TEST(NewtonIntegration, BealeArmijo) {
     EXPECT_LT(result.f_val, 1e-7);
     EXPECT_NEAR(result.x_opt(0), 3.0, 1e-5);
     EXPECT_NEAR(result.x_opt(1), 0.5, 1e-5);
-    std::cout << result.message << std::endl;
 }
 
 TEST(NewtonIntegration, WoodArmijo) {
@@ -96,5 +91,4 @@ TEST(NewtonIntegration, WoodArmijo) {
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-2);
     EXPECT_NEAR(result.x_opt(2), 1.0, 1e-2);
     EXPECT_NEAR(result.x_opt(3), 1.0, 1e-2);
-    std::cout << result.message << std::endl;
 }

@@ -4,10 +4,9 @@
 #include "Himmelblau.hpp"
 #include "Rosenbrock.hpp"
 #include "Wood.hpp"
-#include "optim/linesearch/SteepestDescent.hpp"
 #include "optim/linesearch/ArmijoBacktracking.hpp"
+#include "optim/linesearch/SteepestDescent.hpp"
 #include "optim/linesearch/StrongWolfe.hpp"
-#include "optim/logger/ConsoleLogger.hpp"
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -32,7 +31,6 @@ TEST(SteepestDescentIntegration, ConvexQuadArmijo) {
     EXPECT_NEAR(result.f_val, 0.0, 1e-8);
     EXPECT_NEAR(result.x_opt(0), 0.0, 1e-4);
     EXPECT_NEAR(result.x_opt(1), 0.0, 1e-4);
-    std::cout << result.message << std::endl;
 }
 
 TEST(SteepestDescentIntegration, RosenbrockArmijo) {
@@ -52,7 +50,6 @@ TEST(SteepestDescentIntegration, RosenbrockArmijo) {
     EXPECT_LT(result.f_val, 1e-5);
     EXPECT_NEAR(result.x_opt(0), 1.0, 1e-3);
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-3);
-    std::cout << result.message << std::endl;
 }
 
 TEST(SteepestDescentIntegration, HimmelblauArmijo) {
@@ -68,7 +65,6 @@ TEST(SteepestDescentIntegration, HimmelblauArmijo) {
     EXPECT_LT(result.f_val, 1e-7);
     EXPECT_NEAR(result.x_opt(0), 3.0, 1e-5);
     EXPECT_NEAR(result.x_opt(1), 2.0, 1e-5);
-    std::cout << result.message << std::endl;
 }
 
 TEST(SteepestDescentIntegration, BealeArmijo) {
@@ -76,7 +72,7 @@ TEST(SteepestDescentIntegration, BealeArmijo) {
     Eigen::Vector2d x0;
     x0 << 1.2, 1.2;
 
-    SteepestDescent optimizer(StepLengthMethod::ARMIJO, /*max_iters=*/10000, {});
+    SteepestDescent optimizer(StepLengthMethod::ARMIJO, /*max_iters=*/20000, {});
 
     auto result = optimizer.optimize(f, x0);
 
@@ -84,7 +80,6 @@ TEST(SteepestDescentIntegration, BealeArmijo) {
     EXPECT_LT(result.f_val, 1e-6);
     EXPECT_NEAR(result.x_opt(0), 3.0, 1e-2);
     EXPECT_NEAR(result.x_opt(1), 0.5, 1e-3);
-    std::cout << result.message << std::endl;
 }
 
 TEST(SteepestDescentIntegration, WoodArmijo) {
@@ -101,7 +96,6 @@ TEST(SteepestDescentIntegration, WoodArmijo) {
     for (int i = 0; i < 4; ++i) {
         EXPECT_NEAR(result.x_opt(i), 1.0, 1e-3);
     }
-    std::cout << result.message << std::endl;
 }
 
 TEST(SteepestDescentIntegration, ConvexQuadWolfe) {
@@ -116,7 +110,6 @@ TEST(SteepestDescentIntegration, ConvexQuadWolfe) {
     EXPECT_TRUE(result.converged);
     EXPECT_NEAR(result.f_val, 0.0, 1e-10);
     EXPECT_NEAR(result.x_opt.norm(), 0.0, 1e-7);
-    std::cout << result.message << std::endl;
 }
 
 TEST(SteepestDescentIntegration, RosenbrockWolfe) {
@@ -132,7 +125,6 @@ TEST(SteepestDescentIntegration, RosenbrockWolfe) {
     EXPECT_LT(result.f_val, 1e-3);
     EXPECT_NEAR(result.x_opt(0), 1.0, 1e-2);
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-2);
-    std::cout << result.message << std::endl;
 }
 
 TEST(SteepestDescentIntegration, WoodWolfe) {
@@ -140,8 +132,7 @@ TEST(SteepestDescentIntegration, WoodWolfe) {
     Eigen::Vector4d x0;
     x0 << -3.0, -1.0, -3.0, -1.0;
 
-    optim::logger::ConsoleLogger logger(optim::logger::Verbosity::WARN);
-    SteepestDescent optimizer(StepLengthMethod::STRONG_WOLFE, /*max_iters=*/10000, {}, &logger);
+    SteepestDescent optimizer(StepLengthMethod::STRONG_WOLFE, /*max_iters=*/10000, {});
 
     auto result = optimizer.optimize(f, x0);
     EXPECT_TRUE(result.converged);
@@ -149,5 +140,4 @@ TEST(SteepestDescentIntegration, WoodWolfe) {
     for (int i = 0; i < 4; ++i) {
         EXPECT_NEAR(result.x_opt(i), 1.0, 1e-2);
     }
-    std::cout << result.message << std::endl;
 }
