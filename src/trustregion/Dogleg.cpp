@@ -17,7 +17,7 @@ OptimizationResult Dogleg::optimize(const TwiceDifferentiableFunction &f,
                                     const Eigen::VectorXd &x0) {
     int k = 0;
     bool converged = false;
-    std::string msg = "Failed to converge";
+    StopReason reason = StopReason::MAX_ITERS_REACHED;
 
     Eigen::VectorXd x = x0;
 
@@ -34,7 +34,7 @@ OptimizationResult Dogleg::optimize(const TwiceDifferentiableFunction &f,
         Eigen::VectorXd grad = f.gradient(x);
         if (grad.norm() < criteria_.grad_tol) {
             converged = true;
-            msg = "Converged: gradient fell below tolerance.";
+            reason = StopReason::GRADIENT_CONVERGED;
             break;
         }
         QuadraticModel m;
@@ -77,14 +77,14 @@ OptimizationResult Dogleg::optimize(const TwiceDifferentiableFunction &f,
 
         if (step.norm() < criteria_.step_tol * (x.norm() + 1.0)) {
             converged = true;
-            msg = "Converged: Step size fell below tolerance.";
+            reason = StopReason::STEP_STALLED;
             x += step;
             break;
         }
         double f1 = f.evaluate(x + step);
         if (std::abs(f1 - m.f_x) < criteria_.f_tol * (std::abs(m.f_x) + 1.0)) {
             converged = true;
-            msg = "Converged: Objective function change fell below tolerance.";
+            reason = StopReason::F_CHANGE_BELOW_TOL;
             x += step;
             break;
         }
@@ -93,5 +93,5 @@ OptimizationResult Dogleg::optimize(const TwiceDifferentiableFunction &f,
             x = x + step;
         }
     }
-    return OptimizationResult{x, f.evaluate(x), k, converged, msg};
+    return OptimizationResult{x, f.evaluate(x), k, converged, reason};
 }

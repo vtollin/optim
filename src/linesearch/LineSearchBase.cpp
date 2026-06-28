@@ -27,7 +27,7 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
     Eigen::VectorXd x = x0;
     Eigen::VectorXd grad = f.gradient(x); // carried as loop state
     bool converged = false;
-    std::string msg = "Failed to converge in specified iterations.";
+    StopReason reason = StopReason::MAX_ITERS_REACHED;
     int k = 0;
     resetState(f.sourceDimension());
 
@@ -35,14 +35,14 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
     for (; k < max_iterations_; ++k) {
         if (grad.norm() < criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance
             converged = true;
-            msg = "Converged: gradient norm fell below tolerance.";
+            reason = StopReason::GRADIENT_CONVERGED;
             break;
         }
 
         Eigen::VectorXd direction = computeDirection(f, x, grad);
         StepResult res = step_length_policy_->computeStep(f, x, direction, grad);
         if (res.status == StepStatus::FAILURE) {
-            msg = "Line search failed to find an acceptable step.";
+            reason = StopReason::LINE_SEARCH_FAILURE;
             break;
         }
 
@@ -51,14 +51,12 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
         notifyIteration({k, f0, x, grad, step}); // rho/delta/accepted default to nullopt
         x += step;
         if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
-            converged = true;
-            msg = "Converged: step size fell below tolerance.";
+            reason = StopReason::STEP_STALLED;
             break;
         }
         double f1 = f.evaluate(x);
         if (std::abs(f1 - f0) < criteria_.f_tol * (std::abs(f0) + 1.0)) {
-            converged = true;
-            msg = "Converged: objective change fell below tolerance.";
+            reason = StopReason::F_CHANGE_BELOW_TOL;
             break;
         }
 
@@ -67,7 +65,7 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
         grad = grad_new;
     }
     notifyFinish();
-    return OptimizationResult{x, f.evaluate(x), k, converged, msg};
+    return OptimizationResult{x, f.evaluate(x), k, converged, reason};
 }
 
 template <typename FuncType>

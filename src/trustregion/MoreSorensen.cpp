@@ -31,7 +31,7 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
                                           const Eigen::VectorXd &x0) {
     int k = 0;
     bool converged = false;
-    std::string msg = "Failed to converge in specified iterations.";
+    StopReason reason = StopReason::MAX_ITERS_REACHED;
 
     Eigen::VectorXd x = x0;
 
@@ -51,7 +51,7 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
         m.g = f.gradient(x);
         if (m.g.norm() < criteria_.grad_tol) {
             converged = true;
-            msg = "Converged: gradient fell below tolerance.";
+            reason = StopReason::GRADIENT_CONVERGED;
             break;
         }
         if (tryNewton(m.g, m.B, step)) {
@@ -109,7 +109,7 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
         }
         if (step.norm() < criteria_.step_tol * (x.norm() + 1.0)) {
             converged = true;
-            msg = "Converged: Step size fell below tolerance.";
+            reason = StopReason::STEP_STALLED;
             x += step;
             break;
         }
@@ -117,7 +117,7 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
         double f1 = f.evaluate(x + step);
         if (std::abs(f1 - f0) < criteria_.f_tol * (std::abs(f0) + 1.0)) {
             converged = true;
-            msg = "Converged: Objective function change fell below tolerance.";
+            reason = StopReason::F_CHANGE_BELOW_TOL;
             x += step;
             break;
         }
@@ -127,7 +127,7 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
             m.B = b_handler_->getB(f, x);
         }
     }
-    return OptimizationResult{x, f.evaluate(x), k, converged, msg};
+    return OptimizationResult{x, f.evaluate(x), k, converged, reason};
 }
 
 bool MoreSorensen::tryNewton(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
