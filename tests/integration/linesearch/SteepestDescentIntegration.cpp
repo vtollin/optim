@@ -68,7 +68,7 @@ TEST(SteepestDescentIntegration, RosenbrockValley) {
     SteepestDescent optimizer(StepLengthMethod::ARMIJO, 4000);
     auto result = optimizer.optimize(f, x0);
 
-    EXPECT_TRUE(result.converged);
+    EXPECT_EQ(result.reason, StopReason::F_CHANGE_BELOW_TOL);
     EXPECT_NEAR(result.f_val, 0.0, 1e-5);
     EXPECT_NEAR(result.x_opt(0), 1.0, 5e-3);
     EXPECT_NEAR(result.x_opt(1), 1.0, 5e-3);
