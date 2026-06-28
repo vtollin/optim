@@ -1,16 +1,12 @@
-#include "Beale.hpp"
 #include "ConstantFunction.hpp"
 #include "ConvexQuadratic.hpp"
-#include "Himmelblau.hpp"
 #include "IllCondQuad.hpp"
 #include "Rosenbrock.hpp"
-#include "Wood.hpp"
 #include "optim/linesearch/ArmijoBacktracking.hpp"
 #include "optim/linesearch/SteepestDescent.hpp"
 #include "optim/linesearch/StrongWolfe.hpp"
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
-#include <iostream>
 
 using namespace optim::linesearch;
 using namespace optim;
