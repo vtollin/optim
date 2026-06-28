@@ -18,11 +18,13 @@ struct ConvergenceCriteria {
 class OptimizerBase {
   public:
     virtual ~OptimizerBase() = default;
-    // Sets the logger used for iteration tracing. Does NOT take ownership:
-    // the caller owns the logger and must keep it alive for as long as this
-    // optimizer (or any optimizer sharing it) is in use. Pass nullptr to
+    // Sets logger. Does NOT take ownership: the caller owns the logger and must keep it alive
+    // for as long as this optimizer (or any optimizer sharing it) is in use. Pass nullptr to
     // disable logging.
     virtual void setLogger(optim::logger::Logger *logger);
+
+    // Sets observer used for iteration tracing. Does NOT take ownership: the caller owns
+    // the observer and must keep it alive for as long as this optimizer is in use.
     void addObserver(optim::trace::IterationObserver *obs) {
         if (obs)
             observers_.push_back(obs);
