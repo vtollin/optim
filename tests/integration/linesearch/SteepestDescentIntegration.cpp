@@ -11,7 +11,7 @@
 using namespace optim::linesearch;
 using namespace optim;
 
-// Simple, well-behaved problem with ArmijoBacktracking
+// Simple, convex problem with ArmijoBacktracking
 TEST(SteepestDescentIntegration, ConvexQuadArmijo) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -26,7 +26,7 @@ TEST(SteepestDescentIntegration, ConvexQuadArmijo) {
     EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
 }
 
-// Simple, well-behaved problem with StrongWolfe
+// Simple, convex problem with StrongWolfe
 TEST(SteepestDescentIntegration, ConvexQuadWolfe) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
