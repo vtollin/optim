@@ -3,6 +3,9 @@
 #include <Eigen/Dense>
 
 class Saddle : public optim::TwiceDifferentiableFunction {
+  public:
+    Saddle() : optim::TwiceDifferentiableFunction(2) {}
+
   protected:
     double evaluateImpl(const Eigen::VectorXd &x) const override {
         return x(0) * x(0) - x(1) * x(1);
