@@ -47,8 +47,23 @@ CholeskyFactor Newton::modifiedCholesky(const Eigen::MatrixXd &hessian) {
     int n = hessian.rows();
     Eigen::MatrixXd L = Eigen::MatrixXd::Zero(n, n);
     Eigen::VectorXd d(n);
-    double beta = 10.0;           // controls sensitivity to off-diagonal magnitude
-    double delta = 10e-3;         // minimum ensures result is sufficiently positive definite
+    double delta = 10e-3; // minimum ensures result is sufficiently positive definite
+    double gamma = 0.0;
+    double xi = 0.0;
+    for (Eigen::Index j = 0; j < n; ++j) {
+        gamma = std::max(gamma, std::abs(hessian(j, j)));
+        for (Eigen::Index i = j + 1; i < n; ++i) {
+            xi = std::max(xi, std::abs(hessian(i, j)));
+        }
+    }
+    double beta_sq;
+    if (n > 1) { // compute dynamic beta
+        beta_sq = std::max(std::max(gamma, xi / std::sqrt(n * n - 1)),
+                           std::numeric_limits<double>::epsilon());
+    } else {
+        beta_sq = std::max(gamma, std::numeric_limits<double>::epsilon());
+    }
+
     for (int j = 0; j < n; ++j) { // column
         double theta = 0.0;
         Eigen::VectorXd Lj = L.row(j).segment(0, j);
@@ -65,7 +80,7 @@ CholeskyFactor Newton::modifiedCholesky(const Eigen::MatrixXd &hessian) {
             }
             cij_vec(i - j - 1) = cij;
         }
-        d(j) = std::max(std::max(std::abs(cjj), std::pow(theta / beta, 2)), delta);
+        d(j) = std::max(std::max(std::abs(cjj), std::pow(theta, 2) / beta_sq), delta);
         for (int i = j + 1; i < n; ++i) {
             L(i, j) = cij_vec(i - j - 1) / d(j);
         }
