@@ -18,7 +18,7 @@ TEST(SteepestDescentIntegration, ConvexQuadArmijo) {
     x0 << 5.0, -3.0;
 
     SteepestDescent optimizer(StepLengthMethod::ARMIJO);
-    auto result = optimizer.optimize(f, x0);
+    OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
     EXPECT_NEAR(result.f_val, 0.0, 1e-8);
@@ -33,7 +33,7 @@ TEST(SteepestDescentIntegration, ConvexQuadWolfe) {
     x0 << 5.0, -3.0;
 
     SteepestDescent optimizer(StepLengthMethod::STRONG_WOLFE);
-    auto result = optimizer.optimize(f, x0);
+    OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
     EXPECT_NEAR(result.f_val, 0.0, 1e-8);
@@ -48,7 +48,7 @@ TEST(SteepestDescentIntegration, IllConditionedQuad) {
     x0 << 1.0, 2.0;
 
     SteepestDescent optimizer;
-    auto result = optimizer.optimize(f, x0);
+    OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
     EXPECT_NEAR(result.f_val, 0.0, 1e-8);
@@ -66,7 +66,7 @@ TEST(SteepestDescentIntegration, RosenbrockValley) {
     x0 << -1.2, 1.0;
 
     SteepestDescent optimizer(StepLengthMethod::ARMIJO, 4000);
-    auto result = optimizer.optimize(f, x0);
+    OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_EQ(result.reason, StopReason::F_CHANGE_BELOW_TOL);
     EXPECT_NEAR(result.f_val, 0.0, 1e-5);
@@ -81,11 +81,12 @@ TEST(SteepestDescentIntegration, ZeroGrad) {
     x0 << 0.0, 0.0;
 
     SteepestDescent optimizer;
+    OptimizationResult result = optimizer.optimize(f, x0);
 
-    auto result = optimizer.optimize(f, x0);
     EXPECT_TRUE(result.converged);
-    EXPECT_NEAR(result.x_opt(0), 0.0, 1e-10);
-    EXPECT_NEAR(result.x_opt(1), 0.0, 1e-10);
+    EXPECT_EQ(result.x_opt(0), 0.0);
+    EXPECT_EQ(result.x_opt(1), 0.0);
+    EXPECT_EQ(result.iterations, 0);
 }
 
 // Failure case: test max-iterations-reached branch
