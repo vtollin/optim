@@ -56,14 +56,8 @@ CholeskyFactor Newton::modifiedCholesky(const Eigen::MatrixXd &hessian) {
             xi = std::max(xi, std::abs(hessian(i, j)));
         }
     }
-    double beta_sq;
-    if (n > 1) { // compute dynamic beta
-        beta_sq = std::max(std::max(gamma, xi / std::sqrt(n * n - 1)),
-                           std::numeric_limits<double>::epsilon());
-    } else {
-        beta_sq = std::max(gamma, std::numeric_limits<double>::epsilon());
-    }
-
+    double beta_sq = std::max(std::max(gamma, xi / std::sqrt(n * n - 1)),
+                              std::numeric_limits<double>::epsilon());
     for (int j = 0; j < n; ++j) { // column
         double theta = 0.0;
         Eigen::VectorXd Lj = L.row(j).segment(0, j);
