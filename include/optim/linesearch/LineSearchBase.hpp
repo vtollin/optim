@@ -1,6 +1,8 @@
 #pragma once
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerBase.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
+
 #include <Eigen/Dense>
 
 namespace optim {
@@ -13,7 +15,6 @@ class Logger;
 }
 
 namespace optim::linesearch {
-class StepLengthPolicy;
 
 template <typename FuncType> class LineSearchBase : public optim::OptimizerBase {
   public:
