@@ -3,6 +3,7 @@
 #include "optim/OptimizationResult.hpp"
 #include <Eigen/Dense>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace optim::logger {
@@ -13,7 +14,7 @@ namespace optim {
 struct ConvergenceCriteria {
     double grad_tol = 1e-8;
     double step_tol = 1e-8;
-    double f_tol = 1e-8;
+    std::optional<double> f_tol;
 };
 class OptimizerBase {
   public:

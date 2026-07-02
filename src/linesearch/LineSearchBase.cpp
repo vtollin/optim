@@ -17,7 +17,11 @@ LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[LineSearch] max_iterations must be positive.");
     }
-    if (criteria_.grad_tol <= 0 || criteria_.f_tol <= 0 || criteria_.step_tol <= 0) {
+    double f_tol = 1;
+    if (criteria_.f_tol.has_value()) {
+        f_tol = criteria_.f_tol.value();
+    }
+    if (criteria_.grad_tol <= 0 || f_tol <= 0 || criteria_.step_tol <= 0) {
         throw std::invalid_argument("[LineSearch] Tolerances must be positive.");
     }
     step_length_policy_->setLogger(logger);
@@ -60,10 +64,12 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
             reason = StopReason::STEP_STALLED;
             break;
         }
-        double f1 = f.evaluate(x);
-        if (std::abs(f1 - f0) < criteria_.f_tol * (std::abs(f0) + 1.0)) {
-            reason = StopReason::F_CHANGE_BELOW_TOL;
-            break;
+        if (criteria_.f_tol.has_value()) {
+            double f1 = f.evaluate(x);
+            if (std::abs(f1 - f0) < criteria_.f_tol.value() * (std::abs(f0) + 1.0)) {
+                reason = StopReason::F_CHANGE_BELOW_TOL;
+                break;
+            }
         }
 
         Eigen::VectorXd grad_new = f.gradient(x);

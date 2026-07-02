@@ -113,13 +113,15 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
             x += step;
             break;
         }
-        double f0 = f.evaluate(x);
-        double f1 = f.evaluate(x + step);
-        if (std::abs(f1 - f0) < criteria_.f_tol * (std::abs(f0) + 1.0)) {
-            converged = true;
-            reason = StopReason::F_CHANGE_BELOW_TOL;
-            x += step;
-            break;
+        if (criteria_.f_tol.has_value()) {
+            double f0 = f.evaluate(x);
+            double f1 = f.evaluate(x + step);
+            if (std::abs(f1 - f0) < criteria_.f_tol.value() * (std::abs(f0) + 1.0)) {
+                converged = true;
+                reason = StopReason::F_CHANGE_BELOW_TOL;
+                x += step;
+                break;
+            }
         }
         UpdateResult result = update(f, m, x, step);
         if (result.accepted) {
