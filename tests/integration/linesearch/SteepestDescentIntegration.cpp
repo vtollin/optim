@@ -96,6 +96,6 @@ TEST(SteepestDescentIntegration, MaxItersReached) {
     x0 << 1.0, 1.0;
 
     SteepestDescent optimizer(StepLengthMethod::ARMIJO, 1);
-    auto result = optimizer.optimize(f, x0);
+    OptimizationResult result = optimizer.optimize(f, x0);
     EXPECT_FALSE(result.converged);
 }
