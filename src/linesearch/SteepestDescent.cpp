@@ -19,12 +19,6 @@ SteepestDescent::SteepestDescent(StepLengthMethod method, int max_iterations,
 SteepestDescent::SteepestDescent(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
                                  optim::ConvergenceCriteria criteria, optim::logger::Logger *logger)
     : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
-    if (max_iterations_ < 1) {
-        throw std::invalid_argument("[SteepestDescent] Max iterations must be positive.");
-    }
-    if (criteria_.grad_tol <= 0 || criteria_.f_tol <= 0 || criteria_.step_tol <= 0) {
-        throw std::invalid_argument("[SteepestDescent] Tolerances must be positive.");
-    }
 }
 
 // Search direction is simply negative gradient. N&W Section 3.1, p. 30.

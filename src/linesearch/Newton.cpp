@@ -23,12 +23,6 @@ Newton::Newton(StepLengthMethod method, int max_iterations, optim::ConvergenceCr
 Newton::Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
                optim::ConvergenceCriteria criteria, optim::logger::Logger *logger)
     : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
-    if (max_iterations_ < 1) {
-        throw std::invalid_argument("[Newton] Max iterations must be positive.");
-    }
-    if (criteria_.grad_tol <= 0 || criteria_.f_tol <= 0 || criteria_.step_tol <= 0) {
-        throw std::invalid_argument("[Newton] Tolerances must be positive.");
-    }
 }
 
 // Computes search direction by solving the Cholesky factorized system LDL^T y = -g in three steps.

@@ -14,6 +14,12 @@ LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_
                                          optim::logger::Logger *logger)
     : OptimizerBase(max_iterations, criteria, logger)
     , step_length_policy_(std::move(step_length_policy)) {
+    if (max_iterations_ < 1) {
+        throw std::invalid_argument("[LineSearch] max_iterations must be positive.");
+    }
+    if (criteria_.grad_tol <= 0 || criteria_.f_tol <= 0 || criteria_.step_tol <= 0) {
+        throw std::invalid_argument("[LineSearch] Tolerances must be positive.");
+    }
     step_length_policy_->setLogger(logger);
 }
 
