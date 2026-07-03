@@ -6,10 +6,18 @@
 #include "optim/linesearch/Newton.hpp"
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include <Eigen/Dense>
+#include <algorithm>
 #include <gtest/gtest.h>
 
 using namespace optim::linesearch;
 using namespace optim;
+
+struct NewtonTestObserver : public NewtonObserver {
+    std::vector<CholeskyDiagnostics> choleskyUpdates;
+    void onModifiedCholesky(const CholeskyDiagnostics &info) override {
+        choleskyUpdates.push_back(info);
+    }
+};
 
 // Simple, convex problem with ArmijoBacktracking. By using exact Hessian, Newton steps
 // directly to minimum in one iteration. Ensures modified Cholesky doesn't fire spuriously.
@@ -19,12 +27,15 @@ TEST(NewtonIntegration, ConvexQuad) {
     x0 << 5.0, -3.0;
 
     Newton optimizer;
+    NewtonTestObserver obs;
+    optimizer.setNewtonObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
     EXPECT_EQ(result.f_val, 0.0);
     EXPECT_EQ(result.x_opt.norm(), 0.0);
     EXPECT_EQ(result.iterations, 1.0);
+    EXPECT_EQ(obs.choleskyUpdates[0].max_shift, 0.0);
 }
 
 // Simple function with indefinite hessian. Ensures that modified Cholesky factorization executes
@@ -35,10 +46,14 @@ TEST(NewtonIntegration, SimpleIndefinite) {
     x0 << 0.0, 0.5;
 
     Newton optimizer(StepLengthMethod::ARMIJO, 5);
+    NewtonTestObserver obs;
+    optimizer.setNewtonObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_LE(result.f_val, -2.0);
     EXPECT_GE(result.x_opt.norm(), 1.0);
+    EXPECT_TRUE(std::all_of(obs.choleskyUpdates.begin(), obs.choleskyUpdates.end(),
+                            [](const CholeskyDiagnostics &u) { return u.max_shift > 0.0; }));
 }
 
 // Start near saddle at ~(-0.270, -0.923) in nonconvex Himmelblau function. Stresses modified
@@ -57,7 +72,7 @@ TEST(NewtonIntegration, HimmelblauSaddle) {
 }
 
 // Near the minimum the Hessian is positive definite, so Newton converges
-// quadratically (~74 iters), in contrast with SteepestDescent which took 2000+ iterations to
+// quadratically (~75 iters), in contrast with SteepestDescent which took 2000+ iterations to
 // get within 5e-3 of the minimum.
 TEST(NewtonIntegration, RosenbrockValley) {
     Rosenbrock f;
