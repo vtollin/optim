@@ -44,8 +44,10 @@ void BFGS::updateBFGS(const Eigen::VectorXd &s, const Eigen::VectorXd &y_k) {
     double sHs = s.dot(Hs);
     double sy_k = s.dot(y_k);
     Eigen::VectorXd y;
-    if (sy_k < 0.2 * sHs) { // Powell damping: enforce s^T y >= 0.2 * s^T H s
-        double theta = 0.8 * sHs / (sHs - sy_k);
+    bool was_damped = sy_k < 0.2 * sHs;
+    double theta = 1.0;
+    if (was_damped) { // Powell damping: enforce s^T y >= 0.2 * s^T H s
+        theta = 0.8 * sHs / (sHs - sy_k);
         y = theta * y_k + (1.0 - theta) * Hs;
     } else {
         y = y_k;
@@ -53,6 +55,8 @@ void BFGS::updateBFGS(const Eigen::VectorXd &s, const Eigen::VectorXd &y_k) {
 
     // H_{k+1} = (I - rho s y^T) H_k (I - rho y s^T) + rho s s^T
     double rho = 1.0 / s.dot(y);
+    if (bfgs_obs_)
+        bfgs_obs_->onBFGSUpdate({was_damped, theta, sy_k, sHs, rho});
     Eigen::VectorXd Hy = H_ * y;
     double c = 1.0 + rho * y.dot(Hy);
     H_.noalias() -= rho * Hy * s.transpose();

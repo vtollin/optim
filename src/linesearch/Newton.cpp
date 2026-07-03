@@ -28,7 +28,12 @@ Newton::Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
 // Computes search direction by solving the Cholesky factorized system LDL^T y = -g in three steps.
 Eigen::VectorXd Newton::computeDirection(const TwiceDifferentiableFunction &f,
                                          const Eigen::VectorXd &x, const Eigen::VectorXd &grad) {
-    CholeskyFactor factor = modifiedCholesky(f.hessian(x));
+    Eigen::MatrixXd H = f.hessian(x);
+    CholeskyFactor factor = modifiedCholesky(H);
+    if (newton_obs_) {
+        double max_shift = (factor.d - H.diagonal()).cwiseMax(0.0).maxCoeff();
+        newton_obs_->onModifiedCholesky({factor.d, max_shift});
+    }
     Eigen::VectorXd y = factor.L.triangularView<Eigen::Lower>().solve(-grad); // Ly = -g
     Eigen::VectorXd z = y.array() / factor.d.array();                         // Dz = y
     return factor.L.triangularView<Eigen::Lower>().transpose().solve(z);      // L^Tp = z
