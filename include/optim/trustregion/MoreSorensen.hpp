@@ -2,10 +2,15 @@
 #include "optim/OptimizationResult.hpp"
 #include "optim/trustregion/TrustRegionBase.hpp"
 #include <Eigen/Dense>
+#include <memory>
 
-namespace optim { class TwiceDifferentiableFunction; }
+namespace optim {
+class TwiceDifferentiableFunction;
+}
 
-namespace optim::trustregion { class BMatrixHandler; }
+namespace optim::trustregion {
+class BMatrixHandler;
+}
 
 namespace optim::trustregion {
 enum BMatrixConfig { EXACT, APPROXIMATE };

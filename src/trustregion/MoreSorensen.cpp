@@ -5,8 +5,9 @@
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
 #include <Eigen/Dense>
-#include <limits>
 #include <cmath>
+#include <limits>
+#include <memory>
 #include <stdexcept>
 using namespace optim::trustregion;
 using optim::OptimizationResult;
