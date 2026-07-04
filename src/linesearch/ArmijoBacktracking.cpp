@@ -48,7 +48,8 @@ StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
     }
 
     double f_x = f.evaluate(x);
-    double phi = f.evaluate(x + alpha * direction);
+    double phi0 = f.evaluate(x + alpha * direction);
+    double phi = phi0;
 
     double best_alpha = alpha;
     double best_phi = phi;
@@ -97,7 +98,11 @@ StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
             break;
         }
     }
-    return StepResult{best_alpha, StepStatus::INADEQUATE};
+    if (best_phi < phi0) {
+        return StepResult{best_alpha, StepStatus::INADEQUATE};
+    } else {
+        return StepResult{0.0, StepStatus::FAILURE};
+    }
 }
 
 // Quadratic interpolation on the first call; cubic once a previous iterate is available.

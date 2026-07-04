@@ -107,7 +107,11 @@ StepResult StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen
         }
         alpha = alpha_next;
     }
-    return StepResult{best_alpha, StepStatus::INADEQUATE};
+    if (best_phi < phi0) {
+        return StepResult{best_alpha, StepStatus::INADEQUATE};
+    } else {
+        return StepResult{0.0, StepStatus::FAILURE};
+    }
 }
 
 // Refines a bracket [alpha_lo, alpha_hi] known to contain a Strong Wolfe point until one is
