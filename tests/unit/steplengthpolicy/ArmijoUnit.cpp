@@ -100,7 +100,7 @@ TEST(ArmijoUnit, NonDescent) {
     EXPECT_THROW(ls.computeStep(f, x0, grad, grad), std::runtime_error);
 }
 
-// ArmijoBacktracking return StepResult{0.0, StepStatus::FAILURE} when alpha_init already below
+// ArmijoBacktracking returns StepResult{0.0, StepStatus::FAILURE} when alpha_init already below
 // alpha_min.
 TEST(ArmijoUnit, InitialFailure) {
     ConvexQuadratic f;
