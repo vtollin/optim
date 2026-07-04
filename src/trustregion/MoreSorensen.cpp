@@ -4,8 +4,8 @@
 #include "internal/ExactHessianHandler.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
-#include "optim/OptimizerUtility.hpp"
 #include <Eigen/Dense>
+#include <limits>
 #include <cmath>
 #include <stdexcept>
 using namespace optim::trustregion;
@@ -68,7 +68,7 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
 
             // Determine algebraic multiplictiy of smallest eigenvalue
             for (int i = 1; i < n; ++i) {
-                if (std::abs(eigenvalues(i) - lambda1) < optim::utility::epsilon) {
+                if (std::abs(eigenvalues(i) - lambda1) < std::numeric_limits<double>::epsilon()) {
                     ++multiplicity;
                 } else {
                     break;
@@ -78,7 +78,7 @@ OptimizationResult MoreSorensen::optimize(const TwiceDifferentiableFunction &f,
             bool hardCase = true;
             for (int i = 0; i < multiplicity; ++i) {
                 double proj = eigenvectors.col(i).dot(m.g);
-                if (std::abs(proj) > optim::utility::epsilon) {
+                if (std::abs(proj) > std::numeric_limits<double>::epsilon()) {
                     hardCase = false;
                     break;
                 }
@@ -144,7 +144,7 @@ bool MoreSorensen::tryNewton(const Eigen::VectorXd &grad, const Eigen::MatrixXd 
 
 Eigen::VectorXd MoreSorensen::newtonRootFind(const Eigen::MatrixXd &B, const Eigen::VectorXd &grad,
                                              double lambda1) {
-    double lambda_precision = optim::utility::epsilon * (1.0 + std::abs(lambda1));
+    double lambda_precision = std::numeric_limits<double>::epsilon() * (1.0 + std::abs(lambda1));
     double lambda = std::max(0.0, -lambda1 + lambda_precision);
     double tolerance = 1e-4 * delta_; // loose tolerance
     int max_iters = 3;                // log or expose?

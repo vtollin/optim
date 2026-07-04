@@ -1,10 +1,11 @@
 #include "optim/linesearch/StrongWolfe.hpp"
 #include "optim/Functions.hpp"
-#include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/Interpolation.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <limits>
+
+static const double sqrt_eps = std::sqrt(std::numeric_limits<double>::epsilon());
 
 using namespace optim::linesearch;
 using optim::DifferentiableFunction;
@@ -59,8 +60,7 @@ StepResult StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen
             phi > phi_prev) { // bracket found: Armijo failed or phi rose
             return zoom(alpha_prev, alpha, f, x, direction, phi0, phi_prime0);
         }
-        double phi_prime =
-            optim::utility::directionalDerivative(f, x + alpha * direction, direction);
+        double phi_prime = f.gradient(x + alpha * direction).dot(direction);
         if (std::abs(phi_prime) <=
             -config_.c2 * phi_prime0) { // strong Wolfe conditions satisfied (N&W eq. 3.7)
             return StepResult{alpha, StepStatus::SUCCESS};
@@ -79,8 +79,7 @@ StepResult StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen
             best_alpha = alpha_next;
             best_phi = phi;
         }
-        double tol =
-            optim::utility::sqrt_epsilon * (std::max(std::abs(phi), std::abs(phi_prev)) + 1.0);
+        double tol = sqrt_eps * (std::max(std::abs(phi), std::abs(phi_prev)) + 1.0);
         if (std::abs(phi - phi_prev) < tol) { // relative tolerance with absolute floor
             ++stall_counter;
             if (stall_counter == 5) {
@@ -106,10 +105,8 @@ StepResult StrongWolfe::zoom(double alpha_lo, double alpha_hi, const Differentia
                              double phi0, double phi_prime0) {
     double phi_lo = f.evaluate(x + alpha_lo * direction);
     double phi_hi = f.evaluate(x + alpha_hi * direction);
-    double phi_prime_lo =
-        optim::utility::directionalDerivative(f, x + alpha_lo * direction, direction);
-    double phi_prime_hi =
-        optim::utility::directionalDerivative(f, x + alpha_hi * direction, direction);
+    double phi_prime_lo = f.gradient(x + alpha_lo * direction).dot(direction);
+    double phi_prime_hi = f.gradient(x + alpha_hi * direction).dot(direction);
     for (int i = 0; i < config_.zoom_max_iters; ++i) {
         double alpha = interpolation::cubicHermiteMinimizer(alpha_lo, alpha_hi, phi_lo, phi_hi,
                                                             phi_prime_lo, phi_prime_hi);
@@ -125,11 +122,9 @@ StepResult StrongWolfe::zoom(double alpha_lo, double alpha_hi, const Differentia
             phi >= phi_lo) { // Armijo failed or phi worsened: update hi
             alpha_hi = alpha;
             phi_hi = phi;
-            phi_prime_hi =
-                optim::utility::directionalDerivative(f, x + alpha * direction, direction);
+            phi_prime_hi = f.gradient(x + alpha * direction).dot(direction);
         } else {
-            double phi_prime =
-                optim::utility::directionalDerivative(f, x + alpha * direction, direction);
+            double phi_prime = f.gradient(x + alpha * direction).dot(direction);
             if (std::abs(phi_prime) <=
                 -config_.c2 * phi_prime0) { // strong Wolfe conditions satisfied (N&W eq. 3.7)
                 return StepResult{alpha, StepStatus::SUCCESS};
@@ -144,7 +139,7 @@ StepResult StrongWolfe::zoom(double alpha_lo, double alpha_hi, const Differentia
             phi_lo = phi;
             phi_prime_lo = phi_prime;
         }
-        double tol = optim::utility::sqrt_epsilon * (std::max(alpha_lo, alpha_hi) + 1.0);
+        double tol = sqrt_eps * (std::max(alpha_lo, alpha_hi) + 1.0);
         if (std::abs(alpha_hi - alpha_lo) < tol) { // break if bracket falls below tolerance
             return StepResult{alpha_lo, StepStatus::INADEQUATE};
         }

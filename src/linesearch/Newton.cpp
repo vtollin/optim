@@ -1,7 +1,6 @@
 #include "optim/linesearch/Newton.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
-#include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/LineSearchBase.hpp"
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"

@@ -1,5 +1,4 @@
 #pragma once
-#include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
 #include <Eigen/Dense>
 #include <optional>

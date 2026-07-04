@@ -29,8 +29,8 @@ TEST(StrongWolfeUnit, SimpleConvexQuad) {
     Eigen::VectorXd step = alpha * dir;
     double phi0 = f.evaluate(x0);
     double phi1 = f.evaluate(x0 + step);
-    double phi0_prime = optim::utility::directionalDerivative(f, x0, dir);
-    double phi1_prime = optim::utility::directionalDerivative(f, x0 + step, dir);
+    double phi0_prime = f.gradient(x0).dot(dir);
+    double phi1_prime = f.gradient(x0 + step).dot(dir);
 
     EXPECT_EQ(step(0), -3.0);
     EXPECT_EQ(step(1), -4.0);
@@ -58,8 +58,8 @@ TEST(StrongWolfeUnit, FirstZoomCall) {
     Eigen::VectorXd step = alpha * dir;
     double phi0 = f.evaluate(x0);
     double phi1 = f.evaluate(x0 + step);
-    double phi0_prime = optim::utility::directionalDerivative(f, x0, dir);
-    double phi1_prime = optim::utility::directionalDerivative(f, x0 + step, dir);
+    double phi0_prime = f.gradient(x0).dot(dir);
+    double phi1_prime = f.gradient(x0 + step).dot(dir);
 
     EXPECT_LT(alpha, 1.0);
     EXPECT_LE(phi1, phi0 + 1e-4 * step.dot(grad));
@@ -102,8 +102,8 @@ TEST(StrongWolfeUnit, SecondZoomCall) {
 
     double phi0 = f.evaluate(x0);
     double phi1 = f.evaluate(x0 + step);
-    double phi0p = optim::utility::directionalDerivative(f, x0, dir);
-    double phi1p = optim::utility::directionalDerivative(f, x0 + step, dir);
+    double phi0p = f.gradient(x0).dot(dir);
+    double phi1p = f.gradient(x0 + step).dot(dir);
 
     EXPECT_LE(phi1, phi0 + cfg.c1 * step.dot(grad));
     EXPECT_LE(std::abs(phi1p), -cfg.c2 * phi0p);

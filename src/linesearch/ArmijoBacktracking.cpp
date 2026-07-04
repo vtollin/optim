@@ -1,10 +1,12 @@
 #include "optim/linesearch/ArmijoBacktracking.hpp"
 #include "optim/Functions.hpp"
-#include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/Interpolation.hpp"
 #include <Eigen/Dense>
 #include <cmath>
+#include <limits>
 #include <optional>
+
+static const double sqrt_eps = std::sqrt(std::numeric_limits<double>::epsilon());
 
 using namespace optim::linesearch;
 using optim::DifferentiableFunction;
@@ -33,7 +35,7 @@ StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
     if (dir_deriv >= 0.0) {
         throw std::invalid_argument("[ArmijoBacktracking] direction is not a descent direction.");
     }
-    double alpha_min = optim::utility::sqrt_epsilon * (1.0 + x.norm());
+    double alpha_min = sqrt_eps * (1.0 + x.norm());
     double alpha = config_.alpha_init;
     if (alpha < alpha_min) { // alpha_init already at machine-precision floor for this x
         return StepResult{0.0, StepStatus::FAILURE};
@@ -65,8 +67,8 @@ StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
             best_alpha = new_alpha;
             best_phi = phi;
         }
-        double tol =
-            optim::utility::epsilon * (std::max(std::abs(phi_prev.value()), std::abs(phi)) + 1.0);
+        double tol = std::numeric_limits<double>::epsilon() *
+                     (std::max(std::abs(phi_prev.value()), std::abs(phi)) + 1.0);
         if (std::abs(phi - phi_prev.value()) < tol) {
             break;
         }

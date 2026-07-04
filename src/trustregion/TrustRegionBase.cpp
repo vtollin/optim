@@ -1,9 +1,11 @@
 #include "optim/trustregion/TrustRegionBase.hpp"
 #include "optim/Functions.hpp"
-#include "optim/OptimizerUtility.hpp"
 #include "optim/trustregion/QuadraticModel.hpp"
 #include <Eigen/Dense>
 #include <cmath>
+#include <limits>
+
+static const double sqrt_eps = std::sqrt(std::numeric_limits<double>::epsilon());
 
 using namespace optim::trustregion;
 using optim::TwiceDifferentiableFunction;
@@ -16,7 +18,7 @@ UpdateResult TrustRegionBase::update(const TwiceDifferentiableFunction &f, const
     double delta_old = delta_;
     bool accepted = false;
     // guard against division by 0
-    if (std::abs(predicted) > optim::utility::epsilon * (1.0 + std::abs(actual))) {
+    if (std::abs(predicted) > std::numeric_limits<double>::epsilon() * (1.0 + std::abs(actual))) {
         rho = actual / predicted;
     }
 
@@ -24,7 +26,7 @@ UpdateResult TrustRegionBase::update(const TwiceDifferentiableFunction &f, const
         delta_ = 0.25 * delta_;
     } else {
         double step_norm = step.norm();
-        double delta_tol = optim::utility::sqrt_epsilon * (1.0 + std::max(step_norm, delta_));
+        double delta_tol = sqrt_eps * (1.0 + std::max(step_norm, delta_));
         if (rho > 0.75 && std::abs(delta_ - step_norm) < delta_tol) {
             delta_ = std::min(2 * delta_, delta_max_);
         }

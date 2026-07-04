@@ -1,6 +1,5 @@
 #include "optim/linesearch/SteepestDescent.hpp"
 #include "optim/Functions.hpp"
-#include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
 #include <Eigen/Dense>
