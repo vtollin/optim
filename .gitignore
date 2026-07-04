@@ -1,4 +1,4 @@
-# === C++ build artifacts ===
+# C++ build artifacts
 *.o
 *.obj
 *.lo
@@ -9,27 +9,27 @@
 *.exe
 *.out
 
-# === CMake build system files ===
+# CMake build system files
 CMakeLists.txt
 cmake_install.cmake
 Makefile
 
-# === Build directory ===
+# Build directory
 /build/
 
-# === Generated project files ===
+# Generated project files
 *.log
 *.tmp
 *.swp
 *.bak
 
-# === IDE/editor-specific files ===
+# IDE/editor-specific files
 .vscode/
 .idea/
 *.sublime-workspace
 *.sublime-project
 
-# === OS-specific files ===
+# OS-specific files
 .DS_Store  
 Thumbs.db  
 .clang-format
