@@ -29,10 +29,10 @@ class TrustRegionBase : public optim::OptimizerBase {
 
     TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
                     double delta_max, double eta)
-        : delta_(delta_init)
+        : OptimizerBase(max_iterations, criteria)
+        , delta_(delta_init)
         , delta_max_(delta_max)
-        , eta_(eta)
-        , OptimizerBase(max_iterations, criteria) {
+        , eta_(eta) {
         if (delta_max_ <= 0.0) {
             throw std::invalid_argument("[TrustRegionBase]: delta_max must be positive");
         }
