@@ -2,7 +2,6 @@
 #include "optim/Functions.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/Interpolation.hpp"
-#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <limits>
@@ -10,8 +9,8 @@
 using namespace optim::linesearch;
 using optim::DifferentiableFunction;
 
-StrongWolfe::StrongWolfe(const WolfeConfig &config, optim::logger::Logger *logger)
-    : StepLengthPolicy(logger), config_(config) {
+StrongWolfe::StrongWolfe(const WolfeConfig &config)
+    : StepLengthPolicy(), config_(config) {
     if (config.alpha_init <= 0.0) {
         throw std::invalid_argument("[StrongWolfe] alpha_init must be > 0.");
     }
@@ -71,15 +70,6 @@ StepResult StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen
         }
         double alpha_next = alpha * config_.rho;
         if (alpha_next > config_.alpha_max) {
-            if (logger_) {
-                logger_->log(logger::Verbosity::WARN,
-                             "[StrongWolfe] Step length reached the maximum (" +
-                                 std::to_string(config_.alpha_max) +
-                                 ") during bracketing without satisfying the Wolfe conditions; "
-                                 "returning best step found "
-                                 "(alpha = " +
-                                 std::to_string(best_alpha) + ").");
-            }
             break;
         }
         alpha_prev = alpha;
@@ -94,15 +84,6 @@ StepResult StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen
         if (std::abs(phi - phi_prev) < tol) { // relative tolerance with absolute floor
             ++stall_counter;
             if (stall_counter == 5) {
-                if (logger_) {
-                    logger_->log(logger::Verbosity::WARN,
-                                 "[StrongWolfe] Change in phi stalled below tolerance (" +
-                                     std::to_string(tol) +
-                                     ") for 5 consecutive iterations during bracketing without "
-                                     "satisfying the Wolfe "
-                                     "conditions; returning best step found (alpha = " +
-                                     std::to_string(best_alpha) + ").");
-                }
                 break;
             }
         } else {
@@ -165,24 +146,8 @@ StepResult StrongWolfe::zoom(double alpha_lo, double alpha_hi, const Differentia
         }
         double tol = optim::utility::sqrt_epsilon * (std::max(alpha_lo, alpha_hi) + 1.0);
         if (std::abs(alpha_hi - alpha_lo) < tol) { // break if bracket falls below tolerance
-            if (logger_) {
-                logger_->log(logger::Verbosity::WARN,
-                             "[StrongWolfe] zoom() bracket narrowed below tolerance (" +
-                                 std::to_string(tol) +
-                                 ") before satisfying the curvature condition; "
-                                 "returning alpha_lo (" +
-                                 std::to_string(alpha_lo) +
-                                 "), the best point satisfying sufficient decrease.");
-            }
             return StepResult{alpha_lo, StepStatus::INADEQUATE};
         }
-    }
-    if (logger_) {
-        logger_->log(
-            logger::Verbosity::WARN,
-            "[StrongWolfe] zoom() exhausted " + std::to_string(config_.zoom_max_iters) +
-                " iterations without satisfying the curvature condition; returning alpha_lo (" +
-                std::to_string(alpha_lo) + "), the best point satisfying sufficient decrease.");
     }
     return StepResult{alpha_lo, StepStatus::INADEQUATE};
 }

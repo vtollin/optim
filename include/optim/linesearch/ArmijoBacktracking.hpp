@@ -17,8 +17,7 @@ struct ArmijoConfig {
 
 class ArmijoBacktracking : public StepLengthPolicy {
   public:
-    explicit ArmijoBacktracking(const ArmijoConfig &config = ArmijoConfig{},
-                                optim::logger::Logger *logger = nullptr);
+    explicit ArmijoBacktracking(const ArmijoConfig &config = ArmijoConfig{});
 
     StepResult computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
                            const Eigen::VectorXd &direction,

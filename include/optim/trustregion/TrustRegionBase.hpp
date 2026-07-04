@@ -5,10 +5,6 @@
 #include <Eigen/Dense>
 #include <stdexcept>
 
-namespace optim::logger {
-class Logger;
-}
-
 namespace optim {
 class TwiceDifferentiableFunction;
 }
@@ -32,11 +28,11 @@ class TrustRegionBase : public optim::OptimizerBase {
     double eta_;
 
     TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
-                    double delta_max, double eta, optim::logger::Logger *logger)
+                    double delta_max, double eta)
         : delta_(delta_init)
         , delta_max_(delta_max)
         , eta_(eta)
-        , OptimizerBase(max_iterations, criteria, logger) {
+        , OptimizerBase(max_iterations, criteria) {
         if (delta_max_ <= 0.0) {
             throw std::invalid_argument("[TrustRegionBase]: delta_max must be positive");
         }

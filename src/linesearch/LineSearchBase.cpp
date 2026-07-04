@@ -3,16 +3,14 @@
 #include "optim/linesearch/ArmijoBacktracking.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
 #include "optim/linesearch/StrongWolfe.hpp"
-#include "optim/logger/Logger.hpp"
 #include <stdexcept>
 
 using namespace optim::linesearch;
 
 template <typename FuncType>
 LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_length_policy,
-                                         int max_iterations, optim::ConvergenceCriteria criteria,
-                                         optim::logger::Logger *logger)
-    : OptimizerBase(max_iterations, criteria, logger)
+                                         int max_iterations, optim::ConvergenceCriteria criteria)
+    : OptimizerBase(max_iterations, criteria)
     , step_length_policy_(std::move(step_length_policy)) {
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[LineSearch] max_iterations must be positive.");
@@ -24,7 +22,6 @@ LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_
     if (criteria_.grad_tol <= 0 || f_tol <= 0 || criteria_.step_tol <= 0) {
         throw std::invalid_argument("[LineSearch] Tolerances must be positive.");
     }
-    step_length_policy_->setLogger(logger);
 }
 
 template <typename FuncType>
@@ -58,7 +55,7 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
 
         Eigen::VectorXd step = res.alpha * direction;
         double f0 = f.evaluate(x);
-        notifyIteration({k, f0, x, grad, step}); // rho/delta/accepted default to nullopt
+        notifyIteration({k, f0, x, grad, step, res.status});
         x += step;
         if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
             reason = StopReason::STEP_STALLED;
@@ -78,12 +75,6 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
     }
     notifyFinish();
     return OptimizationResult{x, f.evaluate(x), k, converged, reason};
-}
-
-template <typename FuncType>
-void LineSearchBase<FuncType>::setLogger(optim::logger::Logger *logger) {
-    OptimizerBase::setLogger(logger);
-    step_length_policy_->setLogger(logger);
 }
 
 namespace optim::linesearch {

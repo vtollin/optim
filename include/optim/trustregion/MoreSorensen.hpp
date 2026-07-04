@@ -3,10 +3,6 @@
 #include "optim/trustregion/TrustRegionBase.hpp"
 #include <Eigen/Dense>
 
-namespace optim::logger {
-class Logger;
-}
-
 namespace optim { class TwiceDifferentiableFunction; }
 
 namespace optim::trustregion { class BMatrixHandler; }
@@ -16,8 +12,7 @@ enum BMatrixConfig { EXACT, APPROXIMATE };
 class MoreSorensen : public TrustRegionBase {
   public:
     MoreSorensen(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
-                 double delta_max, double eta, BMatrixConfig cfg,
-                 optim::logger::Logger *logger = nullptr);
+                 double delta_max, double eta, BMatrixConfig cfg);
     ~MoreSorensen();
 
     optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,

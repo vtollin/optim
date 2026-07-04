@@ -1,10 +1,6 @@
 #pragma once
+#include "optim/linesearch/StepStatus.hpp"
 #include <Eigen/Dense>
-#include <memory>
-
-namespace optim::logger {
-class Logger;
-}
 
 namespace optim {
 class DifferentiableFunction;
@@ -12,11 +8,11 @@ class DifferentiableFunction;
 
 namespace optim::linesearch {
 
-enum class StepStatus { SUCCESS, INADEQUATE, FAILURE };
 struct StepResult {
     double alpha;
     StepStatus status;
 };
+
 class StepLengthPolicy {
   public:
     virtual ~StepLengthPolicy() = default;
@@ -25,10 +21,7 @@ class StepLengthPolicy {
                                    const Eigen::VectorXd &direction,
                                    const Eigen::VectorXd &gradient) = 0;
 
-    void setLogger(optim::logger::Logger *logger) { logger_ = logger; }
-
   protected:
-    explicit StepLengthPolicy(optim::logger::Logger *logger) : logger_(logger) {}
-    optim::logger::Logger *logger_;
+    StepLengthPolicy() = default;
 };
 } // namespace optim::linesearch

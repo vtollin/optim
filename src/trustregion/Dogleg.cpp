@@ -1,16 +1,14 @@
 #include "optim/trustregion/Dogleg.hpp"
 #include "optim/Functions.hpp"
-#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
-#include <string>
 
 using namespace optim::trustregion;
 using optim::OptimizationResult;
 using optim::TwiceDifferentiableFunction;
 
 Dogleg::Dogleg(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
-               double delta_max, double eta, optim::logger::Logger *logger)
-    : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta, logger) {
+               double delta_max, double eta)
+    : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta) {
 }
 
 OptimizationResult Dogleg::optimize(const TwiceDifferentiableFunction &f,

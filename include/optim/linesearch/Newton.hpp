@@ -4,10 +4,6 @@
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include <Eigen/Dense>
 
-namespace optim::logger {
-class Logger;
-}
-
 namespace optim {
 class TwiceDifferentiableFunction;
 }
@@ -32,12 +28,10 @@ class NewtonObserver {
 class Newton : public LineSearchBase<optim::TwiceDifferentiableFunction> {
   public:
     explicit Newton(StepLengthMethod method = StepLengthMethod::ARMIJO, int max_iterations = 1000,
-                    optim::ConvergenceCriteria criteria = {},
-                    optim::logger::Logger *logger = nullptr);
+                    optim::ConvergenceCriteria criteria = {});
 
     explicit Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations = 1000,
-                    optim::ConvergenceCriteria criteria = {},
-                    optim::logger::Logger *logger = nullptr);
+                    optim::ConvergenceCriteria criteria = {});
 
     // Does NOT take ownership; caller must keep the observer alive for the optimizer's lifetime.
     void setNewtonObserver(NewtonObserver *obs) { newton_obs_ = obs; }

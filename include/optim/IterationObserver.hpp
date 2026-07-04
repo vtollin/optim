@@ -1,4 +1,5 @@
 #pragma once
+#include "optim/linesearch/StepStatus.hpp"
 #include <Eigen/Dense>
 
 namespace optim::trace {
@@ -6,6 +7,7 @@ struct IterationInfo {
     int iter;
     double fval;
     Eigen::VectorXd x, grad, step;
+    optim::linesearch::StepStatus step_status = optim::linesearch::StepStatus::SUCCESS;
 };
 
 class IterationObserver {

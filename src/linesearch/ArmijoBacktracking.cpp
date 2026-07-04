@@ -2,7 +2,6 @@
 #include "optim/Functions.hpp"
 #include "optim/OptimizerUtility.hpp"
 #include "optim/linesearch/Interpolation.hpp"
-#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <optional>
@@ -10,8 +9,8 @@
 using namespace optim::linesearch;
 using optim::DifferentiableFunction;
 
-ArmijoBacktracking::ArmijoBacktracking(const ArmijoConfig &config, optim::logger::Logger *logger)
-    : StepLengthPolicy(logger), config_(config) {
+ArmijoBacktracking::ArmijoBacktracking(const ArmijoConfig &config)
+    : StepLengthPolicy(), config_(config) {
     if (config.alpha_init <= 0.0) {
         throw std::invalid_argument("[ArmijoBacktracking] alpha_init must be > 0.");
     }
@@ -37,13 +36,6 @@ StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
     double alpha_min = optim::utility::sqrt_epsilon * (1.0 + x.norm());
     double alpha = config_.alpha_init;
     if (alpha < alpha_min) { // alpha_init already at machine-precision floor for this x
-        if (logger_) {
-            logger_->log(logger::Verbosity::WARN,
-                         "[ArmijoBacktracking] alpha_init (" + std::to_string(alpha) +
-                             ") is below the minimum step length (" + std::to_string(alpha_min) +
-                             ") at ||x|| = " + std::to_string(x.norm()) +
-                             "; the iterate may have entered a large-norm region. Returning.");
-        }
         return StepResult{0.0, StepStatus::FAILURE};
     }
 
@@ -63,14 +55,6 @@ StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
         double new_alpha =
             nextTrialStep(alpha, phi, alpha_prev, phi_prev, f_x, dir_deriv, alpha_min);
         if (new_alpha < alpha_min) {
-            if (logger_) {
-                logger_->log(logger::Verbosity::WARN,
-                             "[ArmijoBacktracking] Step length fell below the minimum (" +
-                                 std::to_string(alpha_min) +
-                                 ") before satisfying sufficient decrease; returning best step "
-                                 "found (alpha = " +
-                                 std::to_string(best_alpha) + ").");
-            }
             break;
         }
         alpha_prev = alpha;
@@ -84,17 +68,6 @@ StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
         double tol =
             optim::utility::epsilon * (std::max(std::abs(phi_prev.value()), std::abs(phi)) + 1.0);
         if (std::abs(phi - phi_prev.value()) < tol) {
-            if (logger_) {
-                logger_->log(logger::Verbosity::WARN,
-                             "[ArmijoBacktracking] Change in phi (" +
-                                 std::to_string(std::abs(phi - phi_prev.value())) +
-                                 ") fell below tolerance (" + std::to_string(tol) +
-                                 ") without satisfying sufficient "
-                                 "decrease; the objective is flat along the search direction. "
-                                 "Returning best step found "
-                                 "(alpha = " +
-                                 std::to_string(best_alpha) + ").");
-            }
             break;
         }
     }

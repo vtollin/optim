@@ -4,10 +4,6 @@
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include <Eigen/Dense>
 
-namespace optim::logger {
-class Logger;
-}
-
 namespace optim {
 class DifferentiableFunction;
 } // namespace optim
@@ -34,12 +30,10 @@ class BFGS : public LineSearchBase<optim::DifferentiableFunction> {
     // Armijo is permitted because Powell damping in updateBFGS provides a fallback.
     // However, convergence may be slower and the theoretical guarantees are weaker.
     explicit BFGS(StepLengthMethod method = StepLengthMethod::STRONG_WOLFE,
-                  int max_iterations = 1000, optim::ConvergenceCriteria criteria = {},
-                  optim::logger::Logger *logger = nullptr);
+                  int max_iterations = 1000, optim::ConvergenceCriteria criteria = {});
 
     explicit BFGS(std::unique_ptr<StepLengthPolicy> policy, int max_iterations = 1000,
-                  optim::ConvergenceCriteria criteria = {},
-                  optim::logger::Logger *logger = nullptr);
+                  optim::ConvergenceCriteria criteria = {});
 
     // Does NOT take ownership; caller must keep the observer alive for the optimizer's lifetime.
     void setBFGSObserver(BFGSObserver *obs) { bfgs_obs_ = obs; }

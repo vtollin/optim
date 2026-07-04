@@ -20,8 +20,7 @@ struct WolfeConfig {
 
 class StrongWolfe : public StepLengthPolicy {
   public:
-    explicit StrongWolfe(const WolfeConfig &config = WolfeConfig{},
-                         optim::logger::Logger *logger = nullptr);
+    explicit StrongWolfe(const WolfeConfig &config = WolfeConfig{});
 
     StepResult computeStep(const optim::DifferentiableFunction &f, const Eigen::VectorXd &x,
                            const Eigen::VectorXd &direction,

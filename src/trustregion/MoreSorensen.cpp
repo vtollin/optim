@@ -5,19 +5,16 @@
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerUtility.hpp"
-#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <stdexcept>
-#include <string>
 using namespace optim::trustregion;
 using optim::OptimizationResult;
 using optim::TwiceDifferentiableFunction;
 
 MoreSorensen::MoreSorensen(int max_iterations, optim::ConvergenceCriteria criteria,
-                           double delta_init, double delta_max, double eta, BMatrixConfig cfg,
-                           optim::logger::Logger *logger)
-    : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta, logger) {
+                           double delta_init, double delta_max, double eta, BMatrixConfig cfg)
+    : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta) {
     if (cfg == BMatrixConfig::EXACT) {
         b_handler_ = std::make_unique<ExactHessianHandler>();
     } else if (cfg == BMatrixConfig::APPROXIMATE) {

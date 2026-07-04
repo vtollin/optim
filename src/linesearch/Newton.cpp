@@ -5,24 +5,21 @@
 #include "optim/linesearch/LineSearchBase.hpp"
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
-#include "optim/logger/Logger.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <stdexcept>
-#include <string>
 
 using namespace optim::linesearch;
 using optim::OptimizationResult;
 using optim::TwiceDifferentiableFunction;
 
-Newton::Newton(StepLengthMethod method, int max_iterations, optim::ConvergenceCriteria criteria,
-               optim::logger::Logger *logger)
-    : Newton(makeStepLengthPolicy(method), max_iterations, criteria, logger) {
+Newton::Newton(StepLengthMethod method, int max_iterations, optim::ConvergenceCriteria criteria)
+    : Newton(makeStepLengthPolicy(method), max_iterations, criteria) {
 }
 
 Newton::Newton(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
-               optim::ConvergenceCriteria criteria, optim::logger::Logger *logger)
-    : LineSearchBase(std::move(policy), max_iterations, criteria, logger) {
+               optim::ConvergenceCriteria criteria)
+    : LineSearchBase(std::move(policy), max_iterations, criteria) {
 }
 
 // Computes search direction by solving the Cholesky factorized system LDL^T y = -g in three steps.
