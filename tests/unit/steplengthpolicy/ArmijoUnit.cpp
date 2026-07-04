@@ -97,7 +97,7 @@ TEST(ArmijoUnit, NonDescent) {
     ArmijoBacktracking ls;
 
     Eigen::VectorXd grad = f.gradient(x0);
-    EXPECT_THROW(ls.computeStep(f, x0, grad, grad), std::runtime_error);
+    EXPECT_THROW(ls.computeStep(f, x0, grad, grad), std::invalid_argument);
 }
 
 // ArmijoBacktracking returns StepResult{0.0, StepStatus::FAILURE} when alpha_init already below
