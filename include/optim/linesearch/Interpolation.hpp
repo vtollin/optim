@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <limits>
 
 namespace optim::linesearch::interpolation {
 
@@ -16,7 +17,7 @@ inline double quadraticMinimizer(double alpha_lo, double alpha_hi, double phi_lo
 // (alpha_prev, phi_prev) and (alpha, phi). Returns the minimizer.
 // Used in Armijo backtracking when a previous step is available.
 inline double cubicMinimizer(double phi0, double phi_prev, double phi, double phi_prime0,
-                              double alpha_prev, double alpha) {
+                             double alpha_prev, double alpha) {
     double a_num = alpha_prev * alpha_prev * (phi - phi0 - phi_prime0 * alpha) -
                    alpha * alpha * (phi_prev - phi0 - phi_prime0 * alpha_prev);
     double b_num = -alpha_prev * alpha_prev * alpha_prev * (phi - phi0 - phi_prime0 * alpha) +
@@ -24,6 +25,11 @@ inline double cubicMinimizer(double phi0, double phi_prev, double phi, double ph
     double denom = alpha_prev * alpha_prev * alpha * alpha * (alpha - alpha_prev);
     double a = a_num / denom;
     double b = b_num / denom;
+    // phi0, phi, and phi_prev lie on a quadratic. Cubic formula degenerates (a = 0), but quadratic
+    // has minimizer at -(phi_prime0 / 2b) since b > 0.
+    if (std::abs(a) < std::sqrt(std::numeric_limits<double>::epsilon()) * std::abs(b) && b > 0) {
+        return -phi_prime0 / (2 * b);
+    }
     return (-b + std::sqrt(b * b - 3.0 * a * phi_prime0)) / (3.0 * a);
 }
 

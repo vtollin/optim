@@ -117,8 +117,8 @@ double ArmijoBacktracking::nextTrialStep(double alpha, double phi, std::optional
         alpha_new = interpolation::cubicMinimizer(phi0, phi_prev.value(), phi, phi_prime0,
                                                   alpha_prev.value(), alpha);
     }
-    if (alpha - alpha_new <= 0.1 * alpha || alpha_new <= alpha_min) {
-        alpha_new = alpha / 2; // bisect: interpolated step not a sufficient reduction
+    if (!std::isfinite(alpha_new) || alpha - alpha_new <= 0.1 * alpha || alpha_new <= alpha_min) {
+        alpha_new = alpha / 2; // bisect: interpolated step is degenerate or not a sufficient reduction
     }
     return alpha_new;
 }
