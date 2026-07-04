@@ -10,7 +10,6 @@
 *.out
 
 # CMake build system files
-CMakeLists.txt
 cmake_install.cmake
 Makefile
 
@@ -32,4 +31,3 @@ Makefile
 # OS-specific files
 .DS_Store  
 Thumbs.db  
-.clang-format
