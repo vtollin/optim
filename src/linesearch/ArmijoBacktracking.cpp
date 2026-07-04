@@ -32,7 +32,7 @@ StepResult ArmijoBacktracking::computeStep(const DifferentiableFunction &f,
                                            const Eigen::VectorXd &gradient) {
     double dir_deriv = gradient.dot(direction);
     if (dir_deriv >= 0.0) {
-        throw std::runtime_error("[ArmijoBacktracking] direction is not a descent direction.");
+        throw std::invalid_argument("[ArmijoBacktracking] direction is not a descent direction.");
     }
     double alpha_min = optim::utility::sqrt_epsilon * (1.0 + x.norm());
     double alpha = config_.alpha_init;
@@ -118,7 +118,8 @@ double ArmijoBacktracking::nextTrialStep(double alpha, double phi, std::optional
                                                   alpha_prev.value(), alpha);
     }
     if (!std::isfinite(alpha_new) || alpha - alpha_new <= 0.1 * alpha || alpha_new <= alpha_min) {
-        alpha_new = alpha / 2; // bisect: interpolated step is degenerate or not a sufficient reduction
+        alpha_new =
+            alpha / 2; // bisect: interpolated step is degenerate or not a sufficient reduction
     }
     return alpha_new;
 }
