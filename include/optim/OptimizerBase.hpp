@@ -1,5 +1,5 @@
 #pragma once
-#include "optim/IterationObserver.hpp"
+#include "optim/trace/IterationObserver.hpp"
 #include "optim/OptimizationResult.hpp"
 #include <Eigen/Dense>
 #include <optional>
