@@ -41,6 +41,9 @@ StrongWolfe::StrongWolfe(const WolfeConfig &config, optim::logger::Logger *logge
 StepResult StrongWolfe::computeStep(const DifferentiableFunction &f, const Eigen::VectorXd &x,
                                     const Eigen::VectorXd &direction,
                                     const Eigen::VectorXd &gradient) {
+    if (gradient.dot(direction) >= 0.0) {
+        throw std::invalid_argument("[StrongWolfe] direction is not a descent direction.");
+    }
     double phi0 = f.evaluate(x);
     double phi_prime0 = gradient.dot(direction);
     double alpha = config_.alpha_init;
