@@ -1,8 +1,7 @@
 #include "ConvexQuadratic.hpp"
-#include "IllCondQuad.hpp"
-#include "NonConvex1D.hpp"
 #include "Quadratic1D.hpp"
 #include "optim/linesearch/ArmijoBacktracking.hpp"
+#include "optim/linesearch/StepLengthPolicy.hpp"
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
 #include <stdexcept>
