@@ -20,7 +20,8 @@ BFGS::BFGS(std::unique_ptr<StepLengthPolicy> policy, int max_iterations,
     : LineSearchBase(std::move(policy), max_iterations, criteria) {
 }
 
-Eigen::VectorXd BFGS::computeDirection(const DifferentiableFunction &f, const Eigen::VectorXd &x,
+Eigen::VectorXd BFGS::computeDirection([[maybe_unused]] const DifferentiableFunction &f,
+                                       [[maybe_unused]] const Eigen::VectorXd &x,
                                        const Eigen::VectorXd &grad) {
     return -H_ * grad;
 }
