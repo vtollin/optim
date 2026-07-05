@@ -2,8 +2,8 @@
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerBase.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
-
 #include <Eigen/Dense>
+#include <memory>
 
 namespace optim {
 class DifferentiableFunction;
