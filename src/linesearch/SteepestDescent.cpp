@@ -19,8 +19,8 @@ SteepestDescent::SteepestDescent(std::unique_ptr<StepLengthPolicy> policy, int m
 }
 
 // Search direction is simply negative gradient. N&W Section 3.1, p. 30.
-Eigen::VectorXd SteepestDescent::computeDirection([[maybe_ununsed]] const DifferentiableFunction &f,
-                                                  [[maybe_ununsed]] const Eigen::VectorXd &x,
+Eigen::VectorXd SteepestDescent::computeDirection([[maybe_unused]] const DifferentiableFunction &f,
+                                                  [[maybe_unused]] const Eigen::VectorXd &x,
                                                   const Eigen::VectorXd &grad) {
     return -grad;
 }
