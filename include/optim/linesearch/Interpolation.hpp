@@ -39,7 +39,7 @@ inline double cubicMinimizer(double phi0, double phi_prev, double phi, double ph
 inline double cubicHermiteMinimizer(double alpha_lo, double alpha_hi, double phi_lo, double phi_hi,
                                     double phi_prime_lo, double phi_prime_hi) {
     double d1 = phi_prime_lo + phi_prime_hi - 3.0 * (phi_lo - phi_hi) / (alpha_lo - alpha_hi);
-    double d2 = std::sqrt(d1 * d1 - phi_prime_lo * phi_prime_hi);
+    double d2 = std::sqrt(std::max(0.0, d1 * d1 - phi_prime_lo * phi_prime_hi));
     double num = phi_prime_hi + ((alpha_hi > alpha_lo) ? +d2 : -d2) - d1;
     double denom = phi_prime_hi - phi_prime_lo + 2.0 * ((alpha_hi > alpha_lo) ? +d2 : -d2);
     return alpha_hi - (alpha_hi - alpha_lo) * num / denom;
