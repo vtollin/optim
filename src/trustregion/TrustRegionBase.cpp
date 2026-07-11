@@ -19,11 +19,19 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
     StopReason reason = StopReason::MAX_ITERS_REACHED;
     int k = 0;
     Eigen::VectorXd grad = f.gradient(x);
-    if (delta_ < 0.0) { // sentinel: caller wants delta_init derived from the initial gradient
-        delta_ = std::min(1.0, grad.norm());
+
+    const double xscale = std::max(1.0, x0.norm());
+    double delta_max;
+    if (config_.delta_max.has_value()) {
+        delta_max = config_.delta_max.value();
+    } else if (config_.delta_init.has_value()) {
+        delta_max = std::max(1e3 * xscale, 1e3 * *config_.delta_init);
+    } else {
+        delta_max = 1e3 * xscale;
     }
-    double delta = delta_;
-    double eta = 0.2; // temporary
+    double delta = config_.delta_init.value_or(xscale);
+    delta = std::min(delta, delta_max);
+
     Eigen::MatrixXd B = initializeB(f, x);
     const double grad0_norm = grad.norm();
 
@@ -40,11 +48,11 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
             delta = 0.25 * delta;
         } else {
             if (rho > 0.75 && res.status == SubproblemStatus::BOUNDARY) {
-                delta = std::min(2 * delta, delta_max_);
+                delta = std::min(2 * delta, delta_max);
             }
         }
         bool accepted;
-        if (rho > eta) {
+        if (rho > config_.eta) {
             accepted = true;
             double f_x = f.evaluate(x);
             if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
