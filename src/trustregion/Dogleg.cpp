@@ -3,95 +3,52 @@
 #include <Eigen/Dense>
 
 using namespace optim::trustregion;
-using optim::OptimizationResult;
-using optim::TwiceDifferentiableFunction;
 
 Dogleg::Dogleg(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
                double delta_max, double eta)
     : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta) {
 }
 
-OptimizationResult Dogleg::optimize(const TwiceDifferentiableFunction &f,
-                                    const Eigen::VectorXd &x0) {
-    int k = 0;
-    bool converged = false;
-    StopReason reason = StopReason::MAX_ITERS_REACHED;
+SubproblemResult Dogleg::solveSubproblem(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
+                                         double delta) {
+    double numerator = grad.squaredNorm();                          // g^T g
+    double denominator = (grad.transpose() * B * grad).value();     // g^T B g
 
-    Eigen::VectorXd x = x0;
-
-    int n = f.sourceDimension();
-    if (n != x.size()) {
-        throw std::invalid_argument(
-            "[Dogleg] Initial vector is not in the source of objective function.");
+    Eigen::VectorXd pU = -(numerator / denominator) * grad;
+    // is this just a check for positive definiteness? Could be quicker to just calculate step
+    // and throw if it's non-descent. Also should probably be std::invalid_argument
+    Eigen::LLT<Eigen::MatrixXd> llt(B);
+    if (llt.info() == Eigen::NumericalIssue) {
+        throw std::runtime_error(
+            "[Dogleg] Hessian is not positive definite; dogleg requires convex problems.");
     }
-    if (delta_ < 0.0) {
-        delta_ = std::min(1.0, f.gradient(x0).norm());
+    Eigen::VectorXd pB = B.llt().solve(-grad);
+
+    Eigen::VectorXd step;
+    SubproblemStatus status;
+
+    if (pB.norm() <= delta) {
+        step = pB;
+        status = SubproblemStatus::INTERIOR;
+    } else if (pU.norm() >= delta) {
+        step = (delta / pU.norm()) * pU;
+        status = SubproblemStatus::BOUNDARY;
+    } else {
+        Eigen::VectorXd d = pB - pU;
+
+        double a = d.squaredNorm();
+        double b = 2.0 * d.dot(pU);
+        double c = pU.squaredNorm() - delta * delta;
+
+        double discriminant = b * b - 4 * a * c;
+        if (discriminant < 0) {
+            throw std::runtime_error("[Dogleg] Negative discriminant in step calculation.");
+        }
+
+        double s = (-b + std::sqrt(discriminant)) / (2 * a);
+        step = pU + s * d;
+        status = SubproblemStatus::BOUNDARY;
     }
 
-    for (; k < max_iterations_; ++k) {
-        Eigen::VectorXd grad = f.gradient(x);
-        if (grad.norm() < criteria_.grad_tol) {
-            converged = true;
-            reason = StopReason::GRADIENT_CONVERGED;
-            break;
-        }
-        QuadraticModel m;
-        m.f_x = f.evaluate(x);
-        m.g = f.gradient(x);
-        m.B = f.hessian(x);
-
-        double numerator = m.g.squaredNorm();                       // g^T g
-        double denominator = (m.g.transpose() * m.B * m.g).value(); // g^T B g
-
-        Eigen::VectorXd pU = -(numerator / denominator) * m.g;
-        Eigen::LLT<Eigen::MatrixXd> llt(m.B);
-        if (llt.info() == Eigen::NumericalIssue) {
-            throw std::runtime_error(
-                "[Dogleg] Hessian is not positive definite; dogleg requires convex problems.");
-        }
-        Eigen::VectorXd pB = m.B.llt().solve(-m.g);
-
-        Eigen::VectorXd step;
-
-        if (pB.norm() <= delta_) {
-            step = pB;
-        } else if (pU.norm() >= delta_) {
-            step = (delta_ / pU.norm()) * pU;
-        } else {
-            Eigen::VectorXd d = pB - pU;
-
-            double a = d.squaredNorm();
-            double b = 2.0 * d.dot(pU);
-            double c = pU.squaredNorm() - delta_ * delta_;
-
-            double discriminant = b * b - 4 * a * c;
-            if (discriminant < 0) {
-                throw std::runtime_error("[Dogleg] Negative discriminant in step calculation.");
-            }
-
-            double s = (-b + std::sqrt(discriminant)) / (2 * a);
-            step = pU + s * d;
-        }
-
-        if (step.norm() < criteria_.step_tol * (x.norm() + 1.0)) {
-            converged = true;
-            reason = StopReason::STEP_STALLED;
-            x += step;
-            break;
-        }
-        if (criteria_.f_tol.has_value()) {
-            double f1 = f.evaluate(x + step);
-            if (std::abs(f1 - m.f_x) < criteria_.f_tol.value() * (std::abs(m.f_x) + 1.0)) {
-                converged = true;
-                reason = StopReason::F_CHANGE_BELOW_TOL;
-                x += step;
-                break;
-            }
-        }
-        UpdateResult result = update(f, m, x, step);
-        if (result.accepted) {
-            x = x + step;
-        }
-    }
-    return OptimizationResult{x, f.evaluate(x), k, converged, reason};
+    return SubproblemResult{step, status};
 }

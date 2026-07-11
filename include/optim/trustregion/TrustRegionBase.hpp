@@ -1,7 +1,6 @@
 #pragma once
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerBase.hpp"
-#include "optim/trustregion/QuadraticModel.hpp"
 #include <Eigen/Dense>
 #include <stdexcept>
 
@@ -11,16 +10,16 @@ class TwiceDifferentiableFunction;
 
 namespace optim::trustregion {
 
-struct UpdateResult {
-    double rho;
-    double delta_old;
-    bool accepted;
+enum class SubproblemStatus { INTERIOR, BOUNDARY, NEGATIVECURVATURE, HARDCASE };
+struct SubproblemResult {
+    Eigen::VectorXd p;
+    SubproblemStatus status;
 };
 
 class TrustRegionBase : public optim::OptimizerBase {
   public:
-    virtual optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
-                                               const Eigen::VectorXd &x0) = 0;
+    optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
+                                       const Eigen::VectorXd &x0);
 
   protected:
     double delta_;
@@ -44,7 +43,15 @@ class TrustRegionBase : public optim::OptimizerBase {
         }
     };
 
-    UpdateResult update(const optim::TwiceDifferentiableFunction &f, const QuadraticModel &m,
-                        const Eigen::VectorXd &x, const Eigen::VectorXd &step);
+    virtual SubproblemResult solveSubproblem(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
+                                             double delta) = 0;
+    double computeRho(const TwiceDifferentiableFunction &f, const Eigen::VectorXd &x,
+                      const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
+                      const Eigen::VectorXd &step);
+
+    virtual Eigen::MatrixXd initializeB(const optim::TwiceDifferentiableFunction &f,
+                                        const Eigen::VectorXd &x0);
+    virtual Eigen::MatrixXd updateB(const optim::TwiceDifferentiableFunction &f,
+                                    const Eigen::VectorXd &x);
 };
 } // namespace optim::trustregion

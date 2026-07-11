@@ -20,13 +20,19 @@ class MoreSorensen : public TrustRegionBase {
                  double delta_max, double eta, BMatrixConfig cfg);
     ~MoreSorensen();
 
-    optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
-                                       const Eigen::VectorXd &x0) override;
+  protected:
+    SubproblemResult solveSubproblem(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
+                                     double delta) override;
+    Eigen::MatrixXd initializeB(const optim::TwiceDifferentiableFunction &f,
+                                const Eigen::VectorXd &x0) override;
+    Eigen::MatrixXd updateB(const optim::TwiceDifferentiableFunction &f,
+                            const Eigen::VectorXd &x) override;
 
   private:
     std::unique_ptr<BMatrixHandler> b_handler_;
-    bool tryNewton(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B, Eigen::VectorXd &p_out);
+    bool tryNewton(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B, double delta,
+                  Eigen::VectorXd &p_out);
     Eigen::VectorXd newtonRootFind(const Eigen::MatrixXd &B, const Eigen::VectorXd &grad,
-                                   double lambda1);
+                                   double lambda1, double delta);
 };
 } // namespace optim::trustregion
