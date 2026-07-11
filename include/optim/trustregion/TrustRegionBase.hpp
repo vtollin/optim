@@ -2,6 +2,7 @@
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerBase.hpp"
 #include <Eigen/Dense>
+#include <optional>
 #include <stdexcept>
 
 namespace optim {
@@ -16,30 +17,41 @@ struct SubproblemResult {
     SubproblemStatus status;
 };
 
+struct TrustRegionConfig {
+    double eta = 1e-4;
+    std::optional<double> delta_max;
+    std::optional<double> delta_init;
+};
+
 class TrustRegionBase : public optim::OptimizerBase {
   public:
     optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
                                        const Eigen::VectorXd &x0);
 
   protected:
-    double delta_;
-    double delta_max_;
-    double eta_;
+    TrustRegionConfig config_;
 
-    TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
-                    double delta_max, double eta)
-        : OptimizerBase(max_iterations, criteria)
-        , delta_(delta_init)
-        , delta_max_(delta_max)
-        , eta_(eta) {
-        if (delta_max_ <= 0.0) {
-            throw std::invalid_argument("[TrustRegionBase]: delta_max must be positive");
-        }
-        if (eta_ <= 0.0) {
+    TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria,
+                    TrustRegionConfig config = {})
+        : OptimizerBase(max_iterations, criteria), config_(std::move(config)) {
+        if (config_.eta <= 0.0) {
             throw std::invalid_argument("[TrustRegionBase]: eta must be positive");
         }
-        if (delta_ == 0.0) {
-            throw std::invalid_argument("[TrustRegionBase]: delta_init cannot be zero");
+        if (config_.delta_max.has_value()) {
+            if (config_.delta_max <= 0.0) {
+                throw std::invalid_argument("[TrustRegionBase]: delta_max must be positive");
+            }
+        }
+        if (config_.delta_init.has_value()) {
+            if (config_.delta_init.value() <= 0) {
+                throw std::invalid_argument("[TrustRegionBase]: delta_init must be positive");
+            }
+        }
+        if (config_.delta_init.has_value() && config_.delta_max.has_value()) {
+            if (config_.delta_init.value() > config_.delta_max.value()) {
+                throw std::invalid_argument(
+                    "[TrustRegionBase]: delta_init cannot be greater than delta_max");
+            }
         }
     };
 

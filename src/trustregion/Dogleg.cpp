@@ -4,15 +4,14 @@
 
 using namespace optim::trustregion;
 
-Dogleg::Dogleg(int max_iterations, optim::ConvergenceCriteria criteria, double delta_init,
-               double delta_max, double eta)
-    : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta) {
+Dogleg::Dogleg(int max_iterations, optim::ConvergenceCriteria criteria, TrustRegionConfig config)
+    : TrustRegionBase(max_iterations, criteria, config) {
 }
 
 SubproblemResult Dogleg::solveSubproblem(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
                                          double delta) {
-    double numerator = grad.squaredNorm();                          // g^T g
-    double denominator = (grad.transpose() * B * grad).value();     // g^T B g
+    double numerator = grad.squaredNorm();                      // g^T g
+    double denominator = (grad.transpose() * B * grad).value(); // g^T B g
 
     Eigen::VectorXd pU = -(numerator / denominator) * grad;
     // is this just a check for positive definiteness? Could be quicker to just calculate step

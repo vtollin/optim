@@ -16,7 +16,7 @@ TEST(MoreSoresenIntegration, ConvexQuad) {
     Eigen::VectorXd x0(2);
     x0 << 3.0, -4.0;
 
-    MoreSorensen optimizer(100, {}, -1.0, 100.0, 0.1, BMatrixConfig::APPROXIMATE);
+    MoreSorensen optimizer(100, BMatrixConfig::APPROXIMATE, {}, TrustRegionConfig{0.1, 100.0});
 
     OptimizationResult result = optimizer.optimize(f, x0);
 
@@ -30,7 +30,7 @@ TEST(MoreSorensenIntegration, RosenbrockFunc) {
     Eigen::VectorXd x0(2);
     x0 << -1.2, 1.0;
 
-    MoreSorensen optimizer(100, {}, -1.0, 100.0, 0.1, BMatrixConfig::APPROXIMATE);
+    MoreSorensen optimizer(100, BMatrixConfig::APPROXIMATE, {}, TrustRegionConfig{0.1, 100.0});
 
     OptimizationResult result = optimizer.optimize(f, x0);
 
@@ -45,7 +45,7 @@ TEST(MoreSorensenIntegration, BealeFunc) {
     Eigen::VectorXd x0(2);
     x0 << 1.0, 1.0;
 
-    MoreSorensen optimizer(100, {}, -1.0, 100.0, 0.1, BMatrixConfig::EXACT);
+    MoreSorensen optimizer(100, BMatrixConfig::EXACT, {}, TrustRegionConfig{0.1, 100.0});
 
     OptimizationResult result = optimizer.optimize(f, x0);
 
@@ -60,7 +60,7 @@ TEST(MoreSorensenIntegration, HimmelblauFunc) {
     Eigen::VectorXd x0(2);
     x0 << 0.0, 0.0;
 
-    MoreSorensen optimizer(100, {}, -1.0, 100.0, 0.1, BMatrixConfig::EXACT);
+    MoreSorensen optimizer(100, BMatrixConfig::EXACT, {}, TrustRegionConfig{0.1, 100.0});
 
     OptimizationResult result = optimizer.optimize(f, x0);
 
@@ -75,7 +75,7 @@ TEST(MoreSorensenIntegration, WoodFunc) {
     Eigen::VectorXd x0(4);
     x0 << -3.0, -1.0, -3.0, -1.0;
 
-    MoreSorensen optimizer(100, {}, -1.0, 100.0, 0.1, BMatrixConfig::APPROXIMATE);
+    MoreSorensen optimizer(100, BMatrixConfig::APPROXIMATE, {}, TrustRegionConfig{0.1, 100.0});
 
     OptimizationResult result = optimizer.optimize(f, x0);
 

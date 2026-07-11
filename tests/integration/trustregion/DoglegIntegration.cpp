@@ -12,7 +12,7 @@ TEST(DoglegIntegration, SimpleQuad) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << -3.0, 4.0;
-    Dogleg optimizer(100, {}, -1.0, 1000.0, 0.1);
+    Dogleg optimizer(100, {}, TrustRegionConfig{0.1, 1000.0});
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
@@ -24,7 +24,7 @@ TEST(DoglegIntegration, IllConditionedQuadratic) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << 2.0, 2.0;
-    Dogleg optimizer(100, {}, -1.0, 1000.0, 0.1);
+    Dogleg optimizer(100, {}, TrustRegionConfig{0.1, 1000.0});
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
@@ -47,7 +47,7 @@ TEST(DoglegIntegration, LogisticRegression) {
     LogisticRegressionLoss f(X, y, lambda);
     Eigen::VectorXd w0 = Eigen::VectorXd::Zero(d); // start at zero
 
-    Dogleg optimizer(100, {}, -1.0, 1000.0, 0.1);
+    Dogleg optimizer(100, {}, TrustRegionConfig{0.1, 1000.0});
     OptimizationResult result = optimizer.optimize(f, w0);
 
     EXPECT_TRUE(result.converged);

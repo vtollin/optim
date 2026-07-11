@@ -12,9 +12,9 @@
 using namespace optim::trustregion;
 using optim::TwiceDifferentiableFunction;
 
-MoreSorensen::MoreSorensen(int max_iterations, optim::ConvergenceCriteria criteria,
-                           double delta_init, double delta_max, double eta, BMatrixConfig cfg)
-    : TrustRegionBase(max_iterations, criteria, delta_init, delta_max, eta) {
+MoreSorensen::MoreSorensen(int max_iterations, BMatrixConfig cfg,
+                           optim::ConvergenceCriteria criteria, TrustRegionConfig config)
+    : TrustRegionBase(max_iterations, criteria, config) {
     if (cfg == BMatrixConfig::EXACT) {
         b_handler_ = std::make_unique<ExactHessianHandler>();
     } else if (cfg == BMatrixConfig::APPROXIMATE) {
