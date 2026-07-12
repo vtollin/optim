@@ -28,6 +28,7 @@ class TrustRegionBase : public optim::OptimizerBase {
   public:
     optim::OptimizationResult optimize(const optim::TwiceDifferentiableFunction &f,
                                        const Eigen::VectorXd &x0);
+    void addObserver(IterationObserver *obs) { observers_.push_back(obs); }
 
   protected:
     TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria,
@@ -35,7 +36,7 @@ class TrustRegionBase : public optim::OptimizerBase {
 
   private:
     TrustRegionConfig config_;
-    std::vector<optim::trustregion::IterationObserver *> observers_;
+    std::vector<IterationObserver *> observers_;
     void notifyStart() {
         for (auto *o : observers_)
             o->onStart();

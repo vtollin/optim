@@ -16,6 +16,7 @@ namespace optim::linesearch {
 template <typename FuncType> class LineSearchBase : public optim::OptimizerBase {
   public:
     optim::OptimizationResult optimize(const FuncType &f, const Eigen::VectorXd &x0);
+    void addObserver(IterationObserver *obs) { observers_.push_back(obs); }
 
   protected:
     LineSearchBase(std::unique_ptr<StepLengthPolicy> step_length_policy, int max_iterations,
