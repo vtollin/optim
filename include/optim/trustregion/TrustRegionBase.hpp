@@ -30,22 +30,11 @@ class TrustRegionBase : public optim::OptimizerBase {
                                        const Eigen::VectorXd &x0);
 
   protected:
-    TrustRegionConfig config_;
     TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria,
                     TrustRegionConfig config = {});
 
-    virtual SubproblemResult solveSubproblem(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
-                                             double delta) = 0;
-    double computeRho(const TwiceDifferentiableFunction &f, const Eigen::VectorXd &x,
-                      const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
-                      const Eigen::VectorXd &step);
-
-    virtual Eigen::MatrixXd initializeB(const optim::TwiceDifferentiableFunction &f,
-                                        const Eigen::VectorXd &x0);
-    virtual Eigen::MatrixXd updateB(const optim::TwiceDifferentiableFunction &f,
-                                    const Eigen::VectorXd &x);
-
   private:
+    TrustRegionConfig config_;
     std::vector<optim::trustregion::IterationObserver *> observers_;
     void notifyStart() {
         for (auto *o : observers_)
@@ -59,5 +48,15 @@ class TrustRegionBase : public optim::OptimizerBase {
         for (auto *o : observers_)
             o->onIteration(info);
     }
+
+    double computeRho(const TwiceDifferentiableFunction &f, const Eigen::VectorXd &x,
+                      const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
+                      const Eigen::VectorXd &step);
+    virtual SubproblemResult solveSubproblem(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
+                                             double delta) = 0;
+    virtual Eigen::MatrixXd initializeB(const optim::TwiceDifferentiableFunction &f,
+                                        const Eigen::VectorXd &x0);
+    virtual Eigen::MatrixXd updateB(const optim::TwiceDifferentiableFunction &f,
+                                    const Eigen::VectorXd &x);
 };
 } // namespace optim::trustregion
