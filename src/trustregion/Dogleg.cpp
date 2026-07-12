@@ -10,44 +10,38 @@ Dogleg::Dogleg(int max_iterations, optim::ConvergenceCriteria criteria, TrustReg
 
 SubproblemResult Dogleg::solveSubproblem(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
                                          double delta) {
-    double numerator = grad.squaredNorm();                      // g^T g
-    double denominator = (grad.transpose() * B * grad).value(); // g^T B g
+    const double grad_norm = grad.norm();
+    const double d2 = delta * delta;
 
-    Eigen::VectorXd pU = -(numerator / denominator) * grad;
-    // is this just a check for positive definiteness? Could be quicker to just calculate step
-    // and throw if it's non-descent. Also should probably be std::invalid_argument
     Eigen::LLT<Eigen::MatrixXd> llt(B);
-    if (llt.info() == Eigen::NumericalIssue) {
-        throw std::runtime_error(
-            "[Dogleg] Hessian is not positive definite; dogleg requires convex problems.");
-    }
-    Eigen::VectorXd pB = B.llt().solve(-grad);
 
-    Eigen::VectorXd step;
-    SubproblemStatus status;
-
-    if (pB.norm() <= delta) {
-        step = pB;
-        status = SubproblemStatus::INTERIOR;
-    } else if (pU.norm() >= delta) {
-        step = (delta / pU.norm()) * pU;
-        status = SubproblemStatus::BOUNDARY;
-    } else {
-        Eigen::VectorXd d = pB - pU;
-
-        double a = d.squaredNorm();
-        double b = 2.0 * d.dot(pU);
-        double c = pU.squaredNorm() - delta * delta;
-
-        double discriminant = b * b - 4 * a * c;
-        if (discriminant < 0) {
-            throw std::runtime_error("[Dogleg] Negative discriminant in step calculation.");
+    if (llt.info() != Eigen::Success) { // not PD
+        const double gBg = grad.dot(B * grad);
+        Eigen::VectorXd step = -(delta / grad_norm) * grad;
+        if (gBg > 0) {
+            double tau = std::min(1.0, grad_norm * grad.squaredNorm() / (delta * gBg));
+            step *= tau;
         }
-
-        double s = (-b + std::sqrt(discriminant)) / (2 * a);
-        step = pU + s * d;
-        status = SubproblemStatus::BOUNDARY;
+        return SubproblemResult{step, SubproblemStatus::NEGATIVECURVATURE};
     }
 
-    return SubproblemResult{step, status};
+    Eigen::VectorXd pB = llt.solve(-grad);
+    if (pB.squaredNorm() <= d2) {
+        return SubproblemResult{pB, SubproblemStatus::INTERIOR};
+    }
+
+    const double gBg = grad.dot(B * grad);
+    Eigen::VectorXd pU = -(grad.squaredNorm() / gBg) * grad;
+    const double pU_norm = pU.norm();
+
+    if (pU_norm >= delta) {
+        return SubproblemResult{(delta / pU_norm) * pU, SubproblemStatus::BOUNDARY};
+    }
+
+    Eigen::VectorXd d = pB - pU;
+    double a = d.squaredNorm();
+    double b = 2.0 * d.dot(pU);
+    double c = pU.squaredNorm() - d2;
+    double s = (-b + std::sqrt(b * b - 4.0 * a * c)) / (2.0 * a);
+    return SubproblemResult{pU + s * d, SubproblemStatus::BOUNDARY};
 }
