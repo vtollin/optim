@@ -15,12 +15,11 @@ namespace optim::linesearch {
 
 template <typename FuncType> class LineSearchBase : public optim::OptimizerBase {
   public:
-    LineSearchBase(std::unique_ptr<StepLengthPolicy> step_length_policy, int max_iterations,
-                   optim::ConvergenceCriteria criteria);
-
     optim::OptimizationResult optimize(const FuncType &f, const Eigen::VectorXd &x0);
 
   protected:
+    LineSearchBase(std::unique_ptr<StepLengthPolicy> step_length_policy, int max_iterations,
+                   optim::ConvergenceCriteria criteria);
     std::unique_ptr<StepLengthPolicy> step_length_policy_;
 
   private:
