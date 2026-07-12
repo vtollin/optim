@@ -2,12 +2,12 @@
 #include "optim/linesearch/StepStatus.hpp"
 #include <Eigen/Dense>
 
-namespace optim::trace {
+namespace optim::linesearch {
 struct IterationInfo {
     int iter;
     double fval;
     Eigen::VectorXd x, grad, step;
-    optim::linesearch::StepStatus step_status = optim::linesearch::StepStatus::SUCCESS;
+    StepStatus step_status;
 };
 
 class IterationObserver {
@@ -21,4 +21,4 @@ class IterationObserver {
     virtual void onFinish() {}
 };
 
-} // namespace optim::trace
+} // namespace optim::linesearch
