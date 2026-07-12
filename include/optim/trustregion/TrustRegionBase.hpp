@@ -1,6 +1,7 @@
 #pragma once
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerBase.hpp"
+#include "optim/trustregion/SubproblemStatus.hpp"
 #include <Eigen/Dense>
 #include <optional>
 #include <stdexcept>
@@ -11,7 +12,6 @@ class TwiceDifferentiableFunction;
 
 namespace optim::trustregion {
 
-enum class SubproblemStatus { INTERIOR, BOUNDARY, NEGATIVECURVATURE, HARDCASE };
 struct SubproblemResult {
     Eigen::VectorXd p;
     SubproblemStatus status;
