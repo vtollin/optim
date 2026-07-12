@@ -1,6 +1,7 @@
 #pragma once
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerBase.hpp"
+#include "optim/linesearch/IterationObserver.hpp"
 #include "optim/linesearch/StepLengthPolicy.hpp"
 #include <Eigen/Dense>
 #include <memory>
@@ -23,6 +24,20 @@ template <typename FuncType> class LineSearchBase : public optim::OptimizerBase 
     std::unique_ptr<StepLengthPolicy> step_length_policy_;
 
   private:
+    std::vector<optim::linesearch::IterationObserver *> observers_;
+    void notifyStart() {
+        for (auto *o : observers_)
+            o->onStart();
+    }
+    void notifyFinish() {
+        for (auto *o : observers_)
+            o->onFinish();
+    }
+    void notifyIteration(const optim::linesearch::IterationInfo &info) {
+        for (auto *o : observers_)
+            o->onIteration(info);
+    }
+
     virtual Eigen::VectorXd computeDirection(const FuncType &f, const Eigen::VectorXd &x,
                                              const Eigen::VectorXd &grad) = 0;
     virtual void resetState(int n) {}

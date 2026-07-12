@@ -1,6 +1,7 @@
 #pragma once
 #include "optim/OptimizationResult.hpp"
 #include "optim/OptimizerBase.hpp"
+#include "optim/trustregion/IterationObserver.hpp"
 #include "optim/trustregion/SubproblemStatus.hpp"
 #include <Eigen/Dense>
 #include <optional>
@@ -65,5 +66,20 @@ class TrustRegionBase : public optim::OptimizerBase {
                                         const Eigen::VectorXd &x0);
     virtual Eigen::MatrixXd updateB(const optim::TwiceDifferentiableFunction &f,
                                     const Eigen::VectorXd &x);
+
+  private:
+    std::vector<optim::trustregion::IterationObserver *> observers_;
+    void notifyStart() {
+        for (auto *o : observers_)
+            o->onStart();
+    }
+    void notifyFinish() {
+        for (auto *o : observers_)
+            o->onFinish();
+    }
+    void notifyIteration(const optim::trustregion::IterationInfo &info) {
+        for (auto *o : observers_)
+            o->onIteration(info);
+    }
 };
 } // namespace optim::trustregion

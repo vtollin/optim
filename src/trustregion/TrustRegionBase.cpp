@@ -33,7 +33,7 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
     delta = std::min(delta, delta_max);
 
     Eigen::MatrixXd B = initializeB(f, x);
-
+    notifyStart();
     for (; k < max_iterations_; ++k) {
         if (grad.norm() < criteria_.grad_tol) {
             converged = true;
@@ -43,6 +43,10 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
         SubproblemResult res = solveSubproblem(grad, B, delta);
         Eigen::VectorXd step = res.p;
         double rho = computeRho(f, x, grad, B, step);
+        bool accepted = rho > config_.eta;
+        // TODO: stop evaluting x multiple times
+        double f_x = f.evaluate(x);
+        notifyIteration({k, f_x, rho, delta, x, grad, step, res.status, accepted});
         if (rho < 0.25) {
             delta = 0.25 * delta;
         } else {
@@ -50,10 +54,7 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
                 delta = std::min(2 * delta, delta_max);
             }
         }
-        bool accepted;
-        if (rho > config_.eta) {
-            accepted = true;
-            double f_x = f.evaluate(x);
+        if (accepted) {
             if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
                 converged = true;
                 reason = StopReason::STEP_STALLED;
@@ -72,10 +73,9 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
             x = x + step;
             grad = f.gradient(x); // only recomputed if step is accepted
             B = updateB(f, x);
-        } else {
-            accepted = false;
         }
     }
+    notifyFinish();
     return OptimizationResult{x, f.evaluate(x), k, converged, reason};
 }
 
