@@ -8,6 +8,30 @@
 using namespace optim::trustregion;
 using optim::TwiceDifferentiableFunction;
 
+TrustRegionBase::TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria,
+                                 TrustRegionConfig config)
+    : OptimizerBase(max_iterations, criteria), config_(std::move(config)) {
+    if (config_.eta <= 0.0) {
+        throw std::invalid_argument("[TrustRegionBase]: eta must be positive");
+    }
+    if (config_.delta_max.has_value()) {
+        if (config_.delta_max <= 0.0) {
+            throw std::invalid_argument("[TrustRegionBase]: delta_max must be positive");
+        }
+    }
+    if (config_.delta_init.has_value()) {
+        if (config_.delta_init.value() <= 0) {
+            throw std::invalid_argument("[TrustRegionBase]: delta_init must be positive");
+        }
+    }
+    if (config_.delta_init.has_value() && config_.delta_max.has_value()) {
+        if (config_.delta_init.value() > config_.delta_max.value()) {
+            throw std::invalid_argument(
+                "[TrustRegionBase]: delta_init cannot be greater than delta_max");
+        }
+    }
+};
+
 optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFunction &f,
                                                     const Eigen::VectorXd &x0) {
     if (x0.size() != f.sourceDimension()) {
