@@ -10,8 +10,7 @@ using namespace optim::linesearch;
 template <typename FuncType>
 LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_length_policy,
                                          int max_iterations, optim::ConvergenceCriteria criteria)
-    : OptimizerBase(max_iterations, criteria)
-    , step_length_policy_(std::move(step_length_policy)) {
+    : OptimizerBase(max_iterations, criteria), step_length_policy_(std::move(step_length_policy)) {
     if (max_iterations_ < 1) {
         throw std::invalid_argument("[LineSearch] max_iterations must be positive.");
     }
@@ -40,7 +39,7 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
 
     notifyStart();
     for (; k < max_iterations_; ++k) {
-        if (grad.norm() < criteria_.grad_tol * (1.0 + x.norm())) { // relative tolerance
+        if (grad.norm() < criteria_.grad_tol) { // relative tolerance
             converged = true;
             reason = StopReason::GRADIENT_CONVERGED;
             break;

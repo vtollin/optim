@@ -33,10 +33,9 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
     delta = std::min(delta, delta_max);
 
     Eigen::MatrixXd B = initializeB(f, x);
-    const double grad0_norm = grad.norm();
 
     for (; k < max_iterations_; ++k) {
-        if (grad.norm() < criteria_.grad_tol * (1.0 + grad0_norm)) {
+        if (grad.norm() < criteria_.grad_tol) {
             converged = true;
             reason = StopReason::GRADIENT_CONVERGED;
             break;
