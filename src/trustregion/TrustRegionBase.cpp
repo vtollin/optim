@@ -11,8 +11,8 @@ using optim::TwiceDifferentiableFunction;
 TrustRegionBase::TrustRegionBase(int max_iterations, optim::ConvergenceCriteria criteria,
                                  TrustRegionConfig config)
     : OptimizerBase(max_iterations, criteria), config_(std::move(config)) {
-    if (config_.eta <= 0.0) {
-        throw std::invalid_argument("[TrustRegionBase]: eta must be positive");
+    if (config_.eta < 0.0 || config_.eta >= 0.25) {
+        throw std::invalid_argument("[TrustRegionBase]: eta must be in [0, 0.25)");
     }
     if (config_.delta_max.has_value()) {
         if (config_.delta_max <= 0.0) {
