@@ -36,111 +36,70 @@ Eigen::MatrixXd MoreSorensen::updateB(const TwiceDifferentiableFunction &f,
 
 SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
                                                const Eigen::MatrixXd &B, double delta) {
-    int n = grad.size();
-    Eigen::VectorXd step(n);
-    SubproblemStatus status;
-
-    if (tryNewton(grad, B, delta, step)) {
-        status = SubproblemStatus::INTERIOR;
-    } else {
-        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigenSolver(B);
-
-        if (eigenSolver.info() != Eigen::Success) {
-            throw std::runtime_error("[MoreSorensen] Eigen decomposition failed.");
-        }
-
-        Eigen::VectorXd eigenvalues = eigenSolver.eigenvalues();
-        Eigen::MatrixXd eigenvectors = eigenSolver.eigenvectors();
-
-        double lambda1 = eigenvalues(0);
-        int multiplicity = 1;
-
-        // Determine algebraic multiplictiy of smallest eigenvalue
-        for (int i = 1; i < n; ++i) {
-            if (std::abs(eigenvalues(i) - lambda1) < std::numeric_limits<double>::epsilon()) {
-                ++multiplicity;
-            } else {
-                break;
-            }
-        }
-
-        bool hardCase = true;
-        for (int i = 0; i < multiplicity; ++i) {
-            double proj = eigenvectors.col(i).dot(grad);
-            if (std::abs(proj) > std::numeric_limits<double>::epsilon()) {
-                hardCase = false;
-                break;
-            }
-        }
-
-        if (hardCase) {
-            double lambda = -lambda1;
-            double sum = 0;
-            Eigen::VectorXd ortho_vec = Eigen::VectorXd::Zero(n);
-            for (int i = multiplicity; i < n; ++i) {
-                double num = eigenvectors.col(i).dot(grad);
-                double deno = eigenvalues(i) + lambda;
-                double term = num / deno;
-                ortho_vec += term * eigenvectors.col(i);
-                sum += term * term;
-            }
-            double arg = delta * delta - sum;
-            double tau = std::sqrt(std::max(arg, 0.0));
-            Eigen::VectorXd z = eigenvectors.col(0);
-            step = ortho_vec + tau * z;
-            status = SubproblemStatus::HARDCASE;
-        } else {
-            step = newtonRootFind(B, grad, lambda1, delta);
-            status = SubproblemStatus::BOUNDARY;
-        }
-    }
-
-    return SubproblemResult{step, status};
-}
-
-bool MoreSorensen::tryNewton(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B, double delta,
-                             Eigen::VectorXd &p_out) {
-    Eigen::LLT<Eigen::MatrixXd> llt(B);
-    if (llt.info() == Eigen::Success) {
-        Eigen::VectorXd p_newton = llt.solve(-grad);
-        if (p_newton.norm() <= delta) {
-            p_out = p_newton;
-            return true;
-        }
-    }
-    return false;
-}
-
-Eigen::VectorXd MoreSorensen::newtonRootFind(const Eigen::MatrixXd &B, const Eigen::VectorXd &grad,
-                                             double lambda1, double delta) {
-    double lambda_precision = std::numeric_limits<double>::epsilon() * (1.0 + std::abs(lambda1));
-    double lambda = std::max(0.0, -lambda1 + lambda_precision);
-    double tolerance = 1e-4 * delta; // loose tolerance
-    int max_iters = 3;               // log or expose?
-    int n = B.col(0).size();
-    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(n, n);
     Eigen::VectorXd p;
-    int i = 0;
-    while (i < max_iters) {
-        Eigen::LLT<Eigen::MatrixXd> llt(B + lambda * I);
-        while (llt.info() != Eigen::Success) { // bump lambda until success
-            lambda = std::max(2 * lambda, lambda + 1.0);
-            llt.compute(B + lambda * I);
+    Eigen::Index n = grad.size();
+    // 1. Try lambda = 0 case
+    Eigen::LLT<Eigen::MatrixXd> llt;
+    llt.compute(B);
+    if (llt.info() == Eigen::Success) {
+        p = llt.solve(-grad);
+        if (p.norm() <= delta) {
+            bool onBoundary =
+                (delta - p.norm()) < std::numeric_limits<double>::epsilon() * std::max(1.0, delta);
+            return SubproblemResult{p, onBoundary ? SubproblemStatus::BOUNDARY
+                                                  : SubproblemStatus::INTERIOR};
+        }
+    }
+
+    double lambda_lo = std::max(0.0, -B.diagonal().minCoeff());
+    double lambda_hi = grad.norm() / delta + B.norm(); // Frobenius norm
+    double lambda = lambda_lo + std::numeric_limits<double>::epsilon() * std::max(lambda_lo, 1.0);
+    for (int i = 0; i < 5; ++i) { // fixed max iterations
+        while (llt.compute(B + lambda * Eigen::MatrixXd::Identity(n, n)).info() !=
+               Eigen::Success) { // might need termination
+            lambda_lo = std::max(lambda, lambda_lo);
+            lambda = std::max(std::sqrt(lambda_lo * lambda_hi), 0.01 * (lambda_hi - lambda_lo));
+        }
+
+        if (lambda_hi - lambda_lo <=
+            std::numeric_limits<double>::epsilon() * std::max(1.0, lambda_hi)) {
+            // hard case using full eigendecomposition. Does not handle geometric multiplicity > 1
+            // of lambda1
+            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(B);
+            const Eigen::VectorXd &eigenvals = es.eigenvalues();
+            const Eigen::MatrixXd &eigenvecs = es.eigenvectors();
+
+            double lambda1 = eigenvals(0);
+
+            // build particular solution
+            Eigen::VectorXd g_proj = eigenvecs.transpose() * grad;
+            Eigen::VectorXd p_particular = Eigen::VectorXd::Zero(n);
+            for (Eigen::Index j = 1; j < n; ++j) {
+                p_particular += (-g_proj(j) / (eigenvals(j) - lambda1)) * eigenvecs.col(j);
+            }
+            double tau = std::sqrt(std::max(0.0, delta * delta - p_particular.squaredNorm()));
+            Eigen::VectorXd z1 = eigenvecs.col(0);
+
+            p = p_particular + tau * z1;
+            return SubproblemResult{p, SubproblemStatus::HARDCASE};
         }
 
         p = llt.solve(-grad);
-        double pnorm = p.norm();
-        if (std::abs(pnorm - delta) < tolerance) {
-            return p;
+        if (std::abs(p.norm() - delta) / delta <= 1e-2) { // converged
+            break;
         }
-
-        Eigen::MatrixXd L = llt.matrixL();
-        Eigen::VectorXd q = L.triangularView<Eigen::Lower>().solve(p);
-        double qnorm = q.norm();
-
-        lambda = lambda + (pnorm / qnorm) * (pnorm / qnorm) * ((pnorm - delta) / delta);
-        lambda = std::max(lambda, -lambda1 + lambda_precision);
-        ++i;
+        if (p.norm() < delta) {
+            lambda_hi = lambda;
+        } else {
+            lambda_lo = lambda;
+        }
+        // Newton root-find
+        Eigen::VectorXd q = llt.matrixL().solve(p);
+        lambda = lambda + std::pow((p.norm() / q.norm()), 2) * (p.norm() - delta) / delta;
+        if (lambda <= lambda_lo || lambda >= lambda_hi) {
+            lambda = std::max(lambda_lo + 0.01 * (lambda_hi - lambda_lo),
+                              std::sqrt(lambda_lo * lambda_hi));
+        }
     }
-    return (B + lambda * I).llt().solve(-grad);
+    return SubproblemResult{p, SubproblemStatus::BOUNDARY};
 }
