@@ -22,7 +22,7 @@ SubproblemResult SteihaugCG::solveSubproblem(const Eigen::VectorXd &grad, const 
         double dBd = d.dot(Bd); // Curvature along d
         if (dBd <= 0) {
             double tau = computeBoundaryTau(z, d, delta);
-            return SubproblemResult{z + tau * d, SubproblemStatus::BOUNDARY};
+            return SubproblemResult{z + tau * d, SubproblemStatus::NEGATIVECURVATURE};
         }
         double alpha = r.squaredNorm() / dBd;
         Eigen::VectorXd z_next = z + alpha * d;
