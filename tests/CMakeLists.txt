@@ -24,6 +24,7 @@ add_executable(optim_tests
     integration/linesearch/BFGSIntegration.cpp
     integration/trustregion/DoglegIntegration.cpp
     integration/trustregion/MoreSorensenIntegration.cpp
+    integration/trustregion/SteihaugCGIntegration.cpp
 )
 
 target_include_directories(optim_tests PRIVATE ${PROJECT_SOURCE_DIR}/test_functions)
