@@ -60,11 +60,14 @@ SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
     double lambda_hi = grad.norm() / delta + B.norm(); // Frobenius norm
     double lambda = lambda_lo + std::numeric_limits<double>::epsilon() * std::max(lambda_lo, 1.0);
     for (int i = 0; i < 5; ++i) { // fixed max iterations
-        while (llt.compute(B + lambda * Eigen::MatrixXd::Identity(n, n)).info() !=
-               Eigen::Success) { // might need termination
+        Eigen::MatrixXd shifted = B;
+        shifted.diagonal().array() += lambda;
+        while (llt.compute(shifted).info() != Eigen::Success) {
             lambda_lo = std::max(lambda, lambda_lo);
-            lambda = std::max(std::sqrt(lambda_lo * lambda_hi),
-                              lambda_lo + 0.01 * (lambda_hi - lambda_lo));
+            double lambda_new = std::max(std::sqrt(lambda_lo * lambda_hi),
+                                         lambda_lo + 0.01 * (lambda_hi - lambda_lo));
+            shifted.diagonal().array() += (lambda_new - lambda);
+            lambda = lambda_new;
         }
 
         if (lambda_hi - lambda_lo <=
