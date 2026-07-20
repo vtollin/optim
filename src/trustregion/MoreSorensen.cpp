@@ -41,13 +41,13 @@ Eigen::MatrixXd MoreSorensen::updateB(const TwiceDifferentiableFunction &f,
 // approach. Worth considering other options.
 SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
                                                const Eigen::MatrixXd &B, double delta) {
-    Eigen::VectorXd p;
     Eigen::Index n = grad.size();
+    double hardCaseTol = 1e-8;
     // 1. Try lambda = 0 case
     Eigen::LLT<Eigen::MatrixXd> llt;
     llt.compute(B);
     if (llt.info() == Eigen::Success) {
-        p = llt.solve(-grad);
+        Eigen::VectorXd p = llt.solve(-grad);
         if (p.norm() <= delta) {
             bool onBoundary =
                 (delta - p.norm()) < std::numeric_limits<double>::epsilon() * std::max(1.0, delta);
@@ -59,7 +59,9 @@ SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
     double lambda_lo = std::max(0.0, -B.diagonal().minCoeff());
     double lambda_hi = grad.norm() / delta + B.norm(); // Frobenius norm
     double lambda = lambda_lo + std::numeric_limits<double>::epsilon() * std::max(lambda_lo, 1.0);
-    for (int i = 0; i < 5; ++i) { // fixed max iterations
+    double maxIters = 10;
+    double primary_tol = 1e-3;
+    for (int i = 0; i < maxIters; ++i) {
         Eigen::MatrixXd shifted = B;
         shifted.diagonal().array() += lambda;
         while (llt.compute(shifted).info() != Eigen::Success) {
@@ -70,32 +72,9 @@ SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
             lambda = lambda_new;
         }
 
-        if (lambda_hi - lambda_lo <=
-            std::numeric_limits<double>::epsilon() * std::max(1.0, lambda_hi)) {
-            // hard case using full eigendecomposition. Does not handle geometric multiplicity > 1
-            // of lambda1
-            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(B);
-            const Eigen::VectorXd &eigenvals = es.eigenvalues();
-            const Eigen::MatrixXd &eigenvecs = es.eigenvectors();
-
-            double lambda1 = eigenvals(0);
-
-            // build particular solution
-            Eigen::VectorXd g_proj = eigenvecs.transpose() * grad;
-            Eigen::VectorXd p_particular = Eigen::VectorXd::Zero(n);
-            for (Eigen::Index j = 1; j < n; ++j) {
-                p_particular += (-g_proj(j) / (eigenvals(j) - lambda1)) * eigenvecs.col(j);
-            }
-            double tau = std::sqrt(std::max(0.0, delta * delta - p_particular.squaredNorm()));
-            Eigen::VectorXd z1 = eigenvecs.col(0);
-
-            p = p_particular + tau * z1;
-            return SubproblemResult{p, SubproblemStatus::HARDCASE};
-        }
-
-        p = llt.solve(-grad);
-        if (std::abs(p.norm() - delta) / delta <= 1e-2) { // converged
-            break;
+        Eigen::VectorXd p = llt.solve(-grad);
+        if (std::abs(p.norm() - delta) / delta <= primary_tol) {
+            return SubproblemResult{p, SubproblemStatus::BOUNDARY};
         }
         if (p.norm() < delta) {
             lambda_hi = lambda;
@@ -110,5 +89,62 @@ SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
                               std::sqrt(lambda_lo * lambda_hi));
         }
     }
-    return SubproblemResult{p, SubproblemStatus::BOUNDARY};
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(B);
+    const Eigen::VectorXd &eigenvals = es.eigenvalues();
+    const Eigen::MatrixXd &eigenvecs = es.eigenvectors();
+
+    const double lambda1 = eigenvals(0);
+    Eigen::VectorXd qT_g = eigenvecs.transpose() * grad;
+    const bool g1_zero = std::abs(qT_g(0)) <= hardCaseTol * grad.norm();
+
+    // construct squared norm of p(lambda1)
+    double normSq_edge = 0.0;
+    for (Eigen::Index j = 1; j < n; ++j) {
+        double d = eigenvals(j) - lambda1;
+        normSq_edge += (qT_g(j) * qT_g(j)) / (d * d);
+    }
+
+    // If g is not orthogonal to q1 or the norm of p(lambda1) is greater than delta the solution
+    // exists on (-lambda1, inf) (not hard case).
+    if (g1_zero && normSq_edge <= delta * delta) {
+        Eigen::VectorXd p_particular = Eigen::VectorXd::Zero(n);
+        for (Eigen::Index j = 1; j < n; ++j) {
+            p_particular += (-qT_g(j) / (eigenvals(j) - lambda1)) * eigenvecs.col(j);
+        }
+        double tau = std::sqrt(std::max(delta * delta - p_particular.squaredNorm(), 0.0));
+        Eigen::VectorXd p = p_particular + tau * eigenvecs.col(0);
+        return SubproblemResult{p, SubproblemStatus::HARDCASE};
+    } else {
+        double fallback_tol = 1e-6;
+        double lo = -lambda1;
+        double hi = -lambda1 + grad.norm() / delta;
+        lambda = std::max(lo + 0.01 * (hi - lo), std::sqrt(lo * hi));
+        for (int i = 0; i < 10; ++i) {
+            double p_norm2 = 0.0;
+            double q_norm2 = 0.0;
+            for (Eigen::Index j = 0; j < n; ++j) {
+                double d = eigenvals(j) + lambda;
+                double t = qT_g(j) / d;
+                p_norm2 += t * t;
+                q_norm2 += t * t / d;
+            }
+            double p_norm = std::sqrt(p_norm2);
+
+            if (std::abs(p_norm - delta) / delta < fallback_tol) {
+                break;
+            }
+            if (p_norm > delta) {
+                lo = lambda;
+            } else {
+                hi = lambda;
+            }
+
+            lambda += (p_norm2 / q_norm2) * (p_norm - delta) / delta;
+            if (lambda <= lo || lambda >= hi) {
+                lambda = std::max(lo + 0.01 * (hi - lo), std::sqrt(lo * hi));
+            }
+        }
+        Eigen::VectorXd p = -eigenvecs * (qT_g.array() / (eigenvals.array() + lambda)).matrix();
+        return SubproblemResult{p, SubproblemStatus::BOUNDARY};
+    }
 }
