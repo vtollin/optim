@@ -89,21 +89,32 @@ SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
     const Eigen::MatrixXd &eigenvecs = es.eigenvectors();
 
     const double lambda1 = eigenvals(0);
-    Eigen::VectorXd qT_g = eigenvecs.transpose() * grad;
-    const bool g1_zero = std::abs(qT_g(0)) <= hardCaseTol * grad.norm();
+    const Eigen::VectorXd qT_g = eigenvecs.transpose() * grad;
+    Eigen::Index k = 1;
+    double eigTol = 1e-10;
+    while (k < n && std::abs(lambda1 - eigenvals(k)) < eigTol * std::max(1.0, std::abs(lambda1))) {
+        k++;
+    }
+    bool g1_zero = true;
+    for (Eigen::Index i = 0; i < k; ++i) {
+        if (std::abs(qT_g(i)) > hardCaseTol * grad.norm()) {
+            g1_zero = false;
+            break;
+        }
+    }
 
     // construct squared norm of p(lambda1)
     double normSq_edge = 0.0;
-    for (Eigen::Index j = 1; j < n; ++j) {
-        double d = eigenvals(j) - lambda1;
-        normSq_edge += (qT_g(j) * qT_g(j)) / (d * d);
+    for (Eigen::Index i = k; i < n; ++i) {
+        double d = eigenvals(i) - lambda1;
+        normSq_edge += (qT_g(i) * qT_g(i)) / (d * d);
     }
 
     // If g is not orthogonal to q1 or the norm of p(lambda1) is greater than delta the solution
     // exists on (-lambda1, inf) (not hard case).
     if (g1_zero && normSq_edge <= delta * delta) {
         Eigen::VectorXd p_particular = Eigen::VectorXd::Zero(n);
-        for (Eigen::Index j = 1; j < n; ++j) {
+        for (Eigen::Index j = k; j < n; ++j) {
             p_particular += (-qT_g(j) / (eigenvals(j) - lambda1)) * eigenvecs.col(j);
         }
         double tau = std::sqrt(std::max(delta * delta - p_particular.squaredNorm(), 0.0));
