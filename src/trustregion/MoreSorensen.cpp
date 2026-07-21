@@ -34,11 +34,6 @@ Eigen::MatrixXd MoreSorensen::updateB(const TwiceDifferentiableFunction &f,
     return b_handler_->getB(f, x);
 }
 
-// TODO: Decide how to handle the hard case. The current bracket-collapse check is dead code since
-// the outer loop is bound to 5 iterations. An alternative is add the eigendecomposition outside of
-// the loop as a fallback. The O(n^3) cost will amortize, since the Cholesky-only path will converge
-// in most cases. That is not true More-Sorensen though, which takes an entirely different
-// approach. Worth considering other options.
 SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
                                                const Eigen::MatrixXd &B, double delta) {
     Eigen::Index n = grad.size();
