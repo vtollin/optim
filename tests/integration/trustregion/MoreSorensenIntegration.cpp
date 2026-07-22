@@ -55,7 +55,7 @@ TEST(MoreSorensenIntegration, ConvexQuad) {
     cfg.eta = 0.1;
     cfg.delta_init = 10.0;
     cfg.delta_max = 100.0;
-    MoreSorensen optimizer(100, BMatrixConfig::EXACT, {}, cfg);
+    MoreSorensen optimizer(100, {}, cfg);
     TestObserver obs;
     optimizer.addObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);
@@ -78,7 +78,7 @@ TEST(MoreSorensenIntegration, IllCondBoundaryThenConverge) {
     TrustRegionConfig cfg;
     cfg.delta_init = 0.05;
     cfg.delta_max = 100.0;
-    MoreSorensen optimizer(200, BMatrixConfig::EXACT, {}, cfg);
+    MoreSorensen optimizer(200, {}, cfg);
     TestObserver obs;
     optimizer.addObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);
@@ -97,7 +97,7 @@ TEST(MoreSorensenIntegration, RosenbrockFunc) {
     Eigen::VectorXd x0(2);
     x0 << -1.2, 1.0;
 
-    MoreSorensen optimizer(100, BMatrixConfig::EXACT, {}, TrustRegionConfig{0.1, 100.0});
+    MoreSorensen optimizer(100, {}, TrustRegionConfig{0.1, 100.0});
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
@@ -116,7 +116,7 @@ TEST(MoreSorensenIntegration, HardCaseMultiplicityTwo) {
     TrustRegionConfig cfg;
     cfg.delta_init = 2.0;
     cfg.delta_max = 100.0;
-    MoreSorensen optimizer(50, BMatrixConfig::EXACT, {}, cfg);
+    MoreSorensen optimizer(50, {}, cfg);
     TestObserver obs;
     optimizer.addObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);

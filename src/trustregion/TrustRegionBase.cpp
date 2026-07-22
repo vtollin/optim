@@ -43,6 +43,7 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
     StopReason reason = StopReason::MAX_ITERS_REACHED;
     int k = 0;
     Eigen::VectorXd grad = f.gradient(x);
+    Eigen::MatrixXd B = f.hessian(x);
 
     const double xscale = std::max(1.0, x0.norm());
     double delta_max;
@@ -56,7 +57,6 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
     double delta = config_.delta_init.value_or(xscale);
     delta = std::min(delta, delta_max);
 
-    Eigen::MatrixXd B = initializeB(f, x);
     notifyStart();
     for (; k < max_iterations_; ++k) {
         if (grad.norm() < criteria_.grad_tol) {
@@ -96,7 +96,7 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
             }
             x = x + step;
             grad = f.gradient(x); // only recomputed if step is accepted
-            B = updateB(f, x);
+            B = f.hessian(x);
         }
     }
     notifyFinish();
@@ -116,14 +116,4 @@ double TrustRegionBase::computeRho(const TwiceDifferentiableFunction &f, const E
         rho = 1.0;
     }
     return rho;
-}
-
-Eigen::MatrixXd TrustRegionBase::initializeB(const TwiceDifferentiableFunction &f,
-                                             const Eigen::VectorXd &x0) {
-    return f.hessian(x0);
-}
-
-Eigen::MatrixXd TrustRegionBase::updateB(const TwiceDifferentiableFunction &f,
-                                         const Eigen::VectorXd &x) {
-    return f.hessian(x);
 }

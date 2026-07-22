@@ -1,7 +1,4 @@
 #include "optim/trustregion/MoreSorensen.hpp"
-#include "internal/BFGSHandler.hpp"
-#include "internal/BMatrixHandler.hpp"
-#include "internal/ExactHessianHandler.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
 #include <Eigen/Dense>
@@ -12,27 +9,12 @@
 using namespace optim::trustregion;
 using optim::TwiceDifferentiableFunction;
 
-MoreSorensen::MoreSorensen(int max_iterations, BMatrixConfig cfg,
-                           optim::ConvergenceCriteria criteria, TrustRegionConfig config)
+MoreSorensen::MoreSorensen(int max_iterations, optim::ConvergenceCriteria criteria,
+                           TrustRegionConfig config)
     : TrustRegionBase(max_iterations, criteria, config) {
-    if (cfg == BMatrixConfig::EXACT) {
-        b_handler_ = std::make_unique<ExactHessianHandler>();
-    } else if (cfg == BMatrixConfig::APPROXIMATE) {
-        b_handler_ = std::make_unique<BFGSHandler>();
-    }
 }
 
 MoreSorensen::~MoreSorensen() = default;
-
-Eigen::MatrixXd MoreSorensen::initializeB(const TwiceDifferentiableFunction &f,
-                                          const Eigen::VectorXd &x0) {
-    return b_handler_->initialize(f, x0);
-}
-
-Eigen::MatrixXd MoreSorensen::updateB(const TwiceDifferentiableFunction &f,
-                                      const Eigen::VectorXd &x) {
-    return b_handler_->getB(f, x);
-}
 
 SubproblemResult MoreSorensen::solveSubproblem(const Eigen::VectorXd &grad,
                                                const Eigen::MatrixXd &B, double delta) {
