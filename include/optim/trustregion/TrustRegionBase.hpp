@@ -55,9 +55,5 @@ class TrustRegionBase : public optim::OptimizerBase {
                       const Eigen::VectorXd &step);
     virtual SubproblemResult solveSubproblem(const Eigen::VectorXd &grad, const Eigen::MatrixXd &B,
                                              double delta) = 0;
-    virtual Eigen::MatrixXd initializeB(const optim::TwiceDifferentiableFunction &f,
-                                        const Eigen::VectorXd &x0);
-    virtual Eigen::MatrixXd updateB(const optim::TwiceDifferentiableFunction &f,
-                                    const Eigen::VectorXd &x);
 };
 } // namespace optim::trustregion

@@ -26,8 +26,6 @@ set(TRUSTREGION_SOURCES
     src/trustregion/TrustRegionBase.cpp
     src/trustregion/MoreSorensen.cpp
     src/trustregion/SteihaugCG.cpp
-    src/trustregion/bmatrix/BFGSHandler.cpp
-    src/trustregion/bmatrix/ExactHessianHandler.cpp
 )
 
 set(LINESEARCH_SOURCES 
