@@ -11,20 +11,6 @@ template <typename FuncType>
 LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_length_policy,
                                          int max_iterations, optim::ConvergenceCriteria criteria)
     : OptimizerBase(max_iterations, criteria), step_length_policy_(std::move(step_length_policy)) {
-    if (max_iterations_ < 1) {
-        throw std::invalid_argument("[LineSearch] max_iterations must be positive.");
-    }
-    double f_tol = 1;
-    if (criteria_.f_tol.has_value()) {
-        f_tol = criteria_.f_tol.value();
-    }
-    double step_tol = 1;
-    if (criteria_.step_tol.has_value()) {
-        step_tol = criteria_.step_tol.value();
-    }
-    if (criteria_.grad_tol <= 0 || f_tol <= 0 || step_tol <= 0) {
-        throw std::invalid_argument("[LineSearch] Tolerances must be positive.");
-    }
 }
 
 template <typename FuncType>
