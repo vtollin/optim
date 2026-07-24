@@ -1,6 +1,7 @@
 #include "ConvexQuadratic.hpp"
 #include "IllCondQuad.hpp"
 #include "Rosenbrock.hpp"
+#include "Wood.hpp"
 #include "optim/Functions.hpp"
 #include "optim/OptimizationResult.hpp"
 #include "optim/trustregion/MoreSorensen.hpp"
@@ -104,6 +105,24 @@ TEST(MoreSorensenIntegration, RosenbrockFunc) {
     EXPECT_LT(result.f_val, 1e-7);
     EXPECT_NEAR(result.x_opt(0), 1.0, 1e-6);
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-6);
+}
+
+// Higher-dimensional (4D) nonconvex problem: verifies MoreSorensen's subproblem solve generalizes
+// past the 2D case.
+TEST(MoreSorensenIntegration, WoodHigherDim) {
+    Wood f;
+    Eigen::VectorXd x0(4);
+    x0 << -3.0, -1.0, -3.0, -1.0;
+
+    MoreSorensen optimizer(100, {}, TrustRegionConfig{0.1, 100.0});
+    OptimizationResult result = optimizer.optimize(f, x0);
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.f_val, 1e-7);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-5);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-5);
+    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-5);
+    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-5);
 }
 
 // Exercises the hard-case branch using the function described above. The particular solution at

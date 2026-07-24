@@ -2,6 +2,7 @@
 #include "IllCondQuad.hpp"
 #include "Rosenbrock.hpp"
 #include "Saddle.hpp"
+#include "Wood.hpp"
 #include "optim/OptimizationResult.hpp"
 #include "optim/trustregion/SteihaugCG.hpp"
 #include "optim/trustregion/SubproblemStatus.hpp"
@@ -102,4 +103,21 @@ TEST(SteihaugCGIntegration, RosenbrockConvergence) {
     EXPECT_TRUE(std::any_of(obs.iters.begin(), obs.iters.end(), [](const IterationInfo &u) {
         return u.status == SubproblemStatus::NEGATIVECURVATURE;
     }));
+}
+
+// Higher-dimensional (4D) nonconvex problem: verifies truncated CG generalizes past the 2D case.
+TEST(SteihaugCGIntegration, WoodHigherDim) {
+    Wood f;
+    Eigen::VectorXd x0(4);
+    x0 << -3.0, -1.0, -3.0, -1.0;
+
+    SteihaugCG optimizer;
+    OptimizationResult result = optimizer.optimize(f, x0);
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.f_val, 1e-8);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-4);
 }

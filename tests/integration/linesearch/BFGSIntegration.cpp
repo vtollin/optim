@@ -1,6 +1,7 @@
 #include "ConvexQuadratic.hpp"
 #include "Himmelblau.hpp"
 #include "Rosenbrock.hpp"
+#include "Wood.hpp"
 #include "optim/linesearch/ArmijoBacktracking.hpp"
 #include "optim/linesearch/BFGS.hpp"
 #include "optim/linesearch/StrongWolfe.hpp"
@@ -86,4 +87,22 @@ TEST(BFGSIntegration, PowellDampingAbsent) {
     EXPECT_TRUE(result.converged);
     EXPECT_TRUE(std::all_of(obs.updates.begin(), obs.updates.end(),
                             [](const BFGSUpdateInfo &u) { return !u.was_damped; }));
+}
+
+// Higher-dimensional (4D) nonconvex problem: verifies that BFGS matrix updates generalize past the
+// 2D case.
+TEST(BFGSIntegration, WoodHigherDim) {
+    Wood f;
+    Eigen::VectorXd x0(4);
+    x0 << -3.0, -1.0, -3.0, -1.0;
+
+    BFGS optimizer;
+    OptimizationResult result = optimizer.optimize(f, x0);
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.f_val, 1e-8);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-4);
 }

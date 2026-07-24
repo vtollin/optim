@@ -1,5 +1,6 @@
 #include "ConvexQuadratic.hpp"
 #include "Rosenbrock.hpp"
+#include "Wood.hpp"
 #include "optim/OptimizationResult.hpp"
 #include "optim/trustregion/Dogleg.hpp"
 #include "optim/trustregion/SubproblemStatus.hpp"
@@ -112,6 +113,25 @@ TEST(DoglegIntegration, StartAtMinimum) {
     EXPECT_NEAR(result.x_opt(0), 0.0, 1e-8);
     EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
     EXPECT_EQ(result.iterations, 0);
+}
+
+// Higher-dimensional (4D) nonconvex problem: verifies Dogleg's subproblem solver generalizes past
+// the 2D case. Dogleg converges in ~3900 iterations, so max_iterations is raised. This is expected,
+// as the indefinite regions of Wood force Dogleg to fall back to the Cauchy step frequently.
+TEST(DoglegIntegration, WoodHigherDim) {
+    Wood f;
+    Eigen::VectorXd x0(4);
+    x0 << -3.0, -1.0, -3.0, -1.0;
+
+    Dogleg optimizer(5000);
+    OptimizationResult result = optimizer.optimize(f, x0);
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.f_val, 1e-8);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-4);
 }
 
 // Dogleg returns correctly when max iterations is reached.

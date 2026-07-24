@@ -3,6 +3,7 @@
 #include "RankDeficientQuad.hpp"
 #include "Rosenbrock.hpp"
 #include "Saddle.hpp"
+#include "Wood.hpp"
 #include "optim/linesearch/Newton.hpp"
 #include "optim/linesearch/StepLengthMethod.hpp"
 #include <Eigen/Dense>
@@ -86,6 +87,24 @@ TEST(NewtonIntegration, RosenbrockValley) {
     EXPECT_NEAR(result.x_opt(0), 1.0, 1e-8);
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
     EXPECT_LT(result.iterations, 100);
+}
+
+// Higher-dimensional (4D) nonconvex problem: verifies modified Cholesky and the Newton step
+// generalize past the 2D case.
+TEST(NewtonIntegration, WoodHigherDim) {
+    Wood f;
+    Eigen::VectorXd x0(4);
+    x0 << -3.0, -1.0, -3.0, -1.0;
+
+    Newton optimizer;
+    OptimizationResult result = optimizer.optimize(f, x0);
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.f_val, 1e-8);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-6);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-6);
+    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-6);
+    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-6);
 }
 
 // Newton's modified Cholesky handles singular hessian (diag(2, 0)) and steps directly along x1.
