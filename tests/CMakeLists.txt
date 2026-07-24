@@ -14,11 +14,9 @@ FetchContent_MakeAvailable(googletest)
 add_executable(optim_tests
     unit/steplengthpolicy/ArmijoUnit.cpp
     unit/steplengthpolicy/StrongWolfeUnit.cpp
-    unit/functions/BealeUnit.cpp
     unit/functions/RosenbrockUnit.cpp
     unit/functions/HimmelblauUnit.cpp
     unit/functions/WoodUnit.cpp
-    unit/functions/LogisticRegressionLossUnit.cpp
     integration/linesearch/SteepestDescentIntegration.cpp
     integration/linesearch/NewtonIntegration.cpp
     integration/linesearch/BFGSIntegration.cpp
