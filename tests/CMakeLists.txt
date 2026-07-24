@@ -17,6 +17,8 @@ add_executable(optim_tests
     unit/functions/RosenbrockUnit.cpp
     unit/functions/HimmelblauUnit.cpp
     unit/functions/WoodUnit.cpp
+    unit/base/LineSearchBaseUnit.cpp
+    unit/base/TrustRegionBaseUnit.cpp
     integration/linesearch/SteepestDescentIntegration.cpp
     integration/linesearch/NewtonIntegration.cpp
     integration/linesearch/BFGSIntegration.cpp

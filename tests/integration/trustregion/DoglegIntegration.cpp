@@ -100,21 +100,6 @@ TEST(DoglegIntegration, FallbackRosenbrock) {
     }));
 }
 
-// Dogleg converges immediately when x0 is at the minimum (zero iterations).
-TEST(DoglegIntegration, StartAtMinimum) {
-    ConvexQuadratic f;
-    Eigen::VectorXd x0(2);
-    x0 << 0.0, 0.0;
-
-    Dogleg optimizer;
-    OptimizationResult result = optimizer.optimize(f, x0);
-
-    EXPECT_TRUE(result.converged);
-    EXPECT_NEAR(result.x_opt(0), 0.0, 1e-8);
-    EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
-    EXPECT_EQ(result.iterations, 0);
-}
-
 // Higher-dimensional (4D) nonconvex problem: verifies Dogleg's subproblem solver generalizes past
 // the 2D case. Dogleg converges in ~3900 iterations, so max_iterations is raised. This is expected,
 // as the indefinite regions of Wood force Dogleg to fall back to the Cauchy step frequently.
@@ -132,17 +117,4 @@ TEST(DoglegIntegration, WoodHigherDim) {
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-4);
     EXPECT_NEAR(result.x_opt(2), 1.0, 1e-4);
     EXPECT_NEAR(result.x_opt(3), 1.0, 1e-4);
-}
-
-// Dogleg returns correctly when max iterations is reached.
-TEST(DoglegIntegration, MaxIters) {
-    Rosenbrock f;
-    Eigen::VectorXd x0(2);
-    x0 << -1.2, 1.0;
-
-    Dogleg optimizer(5);
-    OptimizationResult result = optimizer.optimize(f, x0);
-
-    EXPECT_FALSE(result.converged);
-    EXPECT_EQ(result.reason, optim::StopReason::MAX_ITERS_REACHED);
 }

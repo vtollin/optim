@@ -71,29 +71,3 @@ TEST(SteepestDescentIntegration, RosenbrockValley) {
     EXPECT_NEAR(result.x_opt(0), 1.0, 5e-3);
     EXPECT_NEAR(result.x_opt(1), 1.0, 5e-3);
 }
-
-// Edge: gradient at initial point is already zero
-TEST(SteepestDescentIntegration, ZeroGrad) {
-    ConstantFunction f;
-    Eigen::VectorXd x0(2);
-    x0 << 0.0, 0.0;
-
-    SteepestDescent optimizer;
-    OptimizationResult result = optimizer.optimize(f, x0);
-
-    EXPECT_TRUE(result.converged);
-    EXPECT_EQ(result.x_opt(0), 0.0);
-    EXPECT_EQ(result.x_opt(1), 0.0);
-    EXPECT_EQ(result.iterations, 0);
-}
-
-// Failure case: test max-iterations-reached branch
-TEST(SteepestDescentIntegration, MaxItersReached) {
-    ConvexQuadratic f;
-    Eigen::VectorXd x0(2);
-    x0 << 1.0, 1.0;
-
-    SteepestDescent optimizer(StepLengthMethod::ARMIJO, 1);
-    OptimizationResult result = optimizer.optimize(f, x0);
-    EXPECT_FALSE(result.converged);
-}
