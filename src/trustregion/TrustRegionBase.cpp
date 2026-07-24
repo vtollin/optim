@@ -79,11 +79,13 @@ optim::OptimizationResult TrustRegionBase::optimize(const TwiceDifferentiableFun
             }
         }
         if (accepted) {
-            if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
-                converged = true;
-                reason = StopReason::STEP_STALLED;
-                x += step;
-                break;
+            if (criteria_.step_tol.has_value()) {
+                if (step.norm() < criteria_.step_tol.value() * (1.0 + x.norm())) {
+                    converged = true;
+                    reason = StopReason::STEP_STALLED;
+                    x += step;
+                    break;
+                }
             }
             if (criteria_.f_tol.has_value()) {
                 double f1 = f.evaluate(x + step);

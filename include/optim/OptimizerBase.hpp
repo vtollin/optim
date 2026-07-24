@@ -7,7 +7,7 @@
 namespace optim {
 struct ConvergenceCriteria {
     double grad_tol = 1e-8;
-    double step_tol = 1e-8;
+    std::optional<double> step_tol;
     std::optional<double> f_tol;
 };
 class OptimizerBase {

@@ -18,7 +18,11 @@ LineSearchBase<FuncType>::LineSearchBase(std::unique_ptr<StepLengthPolicy> step_
     if (criteria_.f_tol.has_value()) {
         f_tol = criteria_.f_tol.value();
     }
-    if (criteria_.grad_tol <= 0 || f_tol <= 0 || criteria_.step_tol <= 0) {
+    double step_tol = 1;
+    if (criteria_.step_tol.has_value()) {
+        step_tol = criteria_.step_tol.value();
+    }
+    if (criteria_.grad_tol <= 0 || f_tol <= 0 || step_tol <= 0) {
         throw std::invalid_argument("[LineSearch] Tolerances must be positive.");
     }
 }
@@ -56,9 +60,11 @@ optim::OptimizationResult LineSearchBase<FuncType>::optimize(const FuncType &f,
         double f0 = f.evaluate(x);
         notifyIteration({k, f0, x, grad, step, res.status});
         x += step;
-        if (step.norm() < criteria_.step_tol * (1.0 + x.norm())) {
-            reason = StopReason::STEP_STALLED;
-            break;
+        if (criteria_.step_tol.has_value()) {
+            if (step.norm() < criteria_.step_tol.value() * (1.0 + x.norm())) {
+                reason = StopReason::STEP_STALLED;
+                break;
+            }
         }
         if (criteria_.f_tol.has_value()) {
             double f1 = f.evaluate(x);
