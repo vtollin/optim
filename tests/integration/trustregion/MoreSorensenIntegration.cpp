@@ -21,8 +21,8 @@ struct TestObserver : public IterationObserver {
 // f(x0, x1, x2) = x2^2 + 2*x2, independent of x0, x1. Hessian is diag(0,0,2): the minimum
 // eigenvalue 0 has geometric multiplicity 2. At x0 = (0,0,0) the gradient is (0,0,2), which is
 // exactly orthogonal to the eigenspace of lambda1. At lambda = lambda1, the norm of the particular
-// solution (1) is less than the trust-region radius (2), so solveSubproblem must take the hard-case
-// branch and exercise the multiplicity-2 loop.
+// solution (1.0) is less than the trust-region radius (2.0), so MoreSorensen's subproblem solver
+// must take the hard-case branch and exercise the multiplicity-2 loop.
 class HardCaseQuad : public optim::TwiceDifferentiableFunction {
   public:
     HardCaseQuad() : optim::TwiceDifferentiableFunction(3) {}
@@ -45,8 +45,9 @@ class HardCaseQuad : public optim::TwiceDifferentiableFunction {
     }
 };
 
-// MoreSorensen takes the full Newton step to the global minimizer for a convex quadratic. The
-// subproblem status on the only iteration is INTERIOR.
+// Ensures that MoreSorensen takes the full Newton step to the global minimizer on a convex
+// quadratic when the radius is large enough. The subproblem status on the only iteration is
+// INTERIOR.
 TEST(MoreSorensenIntegration, ConvexQuad) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -56,21 +57,23 @@ TEST(MoreSorensenIntegration, ConvexQuad) {
     cfg.eta = 0.1;
     cfg.delta_init = 10.0;
     cfg.delta_max = 100.0;
+
     MoreSorensen optimizer(100, {}, cfg);
     TestObserver obs;
     optimizer.addObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
-    EXPECT_NEAR(result.x_opt(0), 0.0, 1e-7);
-    EXPECT_NEAR(result.x_opt(1), 0.0, 1e-7);
+    EXPECT_NEAR(result.x_opt(0), 0.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
     EXPECT_EQ(result.iterations, 1);
+
     ASSERT_FALSE(obs.iters.empty());
     EXPECT_EQ(obs.iters[0].status, SubproblemStatus::INTERIOR);
 }
 
-// A small delta_init forces an initial BOUNDARY step on ill-conditioned quadratic. MoreSorensen
-// still converges to the minimizer as the trust region expands.
+// Verifies that MoreSoresen takes a boundary step when the model function's minimizer is outside of
+// the trust-region.
 TEST(MoreSorensenIntegration, IllCondBoundaryThenConverge) {
     IllCondQuad f;
     Eigen::VectorXd x0(2);
