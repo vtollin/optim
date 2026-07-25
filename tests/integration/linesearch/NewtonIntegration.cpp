@@ -20,8 +20,8 @@ struct NewtonTestObserver : public NewtonObserver {
     }
 };
 
-// Simple, convex problem with ArmijoBacktracking. By using exact Hessian, Newton steps
-// directly to minimum in one iteration. Ensures modified Cholesky doesn't fire spuriously.
+// Exercises Newton on a simple, convex problem. Modified Cholesky does not alter the Hessian and
+// Newton steps to the minimum in one iteration.
 TEST(NewtonIntegration, ConvexQuad) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -33,15 +33,16 @@ TEST(NewtonIntegration, ConvexQuad) {
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
-    EXPECT_EQ(result.f_val, 0.0);
-    EXPECT_EQ(result.x_opt.norm(), 0.0);
+    EXPECT_NEAR(result.f_val, 0.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(0), 0.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
     EXPECT_EQ(result.iterations, 1.0);
     EXPECT_EQ(obs.choleskyUpdates[0].max_shift, 0.0);
 }
 
-// Simple function with indefinite hessian. Ensures that modified Cholesky factorization executes
-// and pulls optimizer away from saddle point at (0, 0).
-TEST(NewtonIntegration, SimpleIndefinite) {
+// Ensures that the modified Cholesky factorization enforces positive definiteness and pulls
+// the optimizer away from saddle point at (0, 0).
+TEST(NewtonIntegration, ModifiedCholeskyEngages) {
     Saddle f;
     Eigen::VectorXd x0(2);
     x0 << 0.0, 0.5;
@@ -57,8 +58,8 @@ TEST(NewtonIntegration, SimpleIndefinite) {
                             [](const CholeskyDiagnostics &u) { return u.max_shift > 0.0; }));
 }
 
-// Start near saddle at ~(-0.270, -0.923) in nonconvex Himmelblau function. Stresses modified
-// Cholesky factorization to reach minimum at (3.0, 2.0).
+// Stresses Newton's modified Cholesky factorization to reach a minimum of nonconvex Himmelblau
+// function.
 TEST(NewtonIntegration, HimmelblauSaddle) {
     Himmelblau f;
     Eigen::VectorXd x0(2);
@@ -67,14 +68,15 @@ TEST(NewtonIntegration, HimmelblauSaddle) {
     Newton optimizer;
     OptimizationResult result = optimizer.optimize(f, x0);
 
+    EXPECT_TRUE(result.converged);
     EXPECT_LT(result.f_val, 1e-8);
     EXPECT_NEAR(result.x_opt(0), 3.0, 1e-8);
     EXPECT_NEAR(result.x_opt(1), 2.0, 1e-8);
 }
 
-// Near the minimum the Hessian is positive definite, so Newton converges
-// quadratically (~75 iters), in contrast with SteepestDescent which took 2000+ iterations to
-// get within 5e-3 of the minimum.
+// Validates Newton on Rosenbrock. Near the minimum the Hessian is positive definite, so Newton
+// converges quadratically (~75 iters), in contrast with SteepestDescent which took 2000+ iterations
+// to get within 5e-3 of the minimum.
 TEST(NewtonIntegration, RosenbrockValley) {
     Rosenbrock f;
     Eigen::VectorXd x0(2);
@@ -83,13 +85,14 @@ TEST(NewtonIntegration, RosenbrockValley) {
     Newton optimizer;
     OptimizationResult result = optimizer.optimize(f, x0);
 
+    EXPECT_TRUE(result.converged);
     EXPECT_LT(result.f_val, 1e-8);
     EXPECT_NEAR(result.x_opt(0), 1.0, 1e-8);
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
     EXPECT_LT(result.iterations, 100);
 }
 
-// Higher-dimensional (4D) nonconvex problem: verifies modified Cholesky and the Newton step
+// Higher-dimensional (4D) problem: verifies that modified Cholesky and the Newton step
 // generalize past the 2D case.
 TEST(NewtonIntegration, WoodHigherDim) {
     Wood f;
@@ -101,13 +104,14 @@ TEST(NewtonIntegration, WoodHigherDim) {
 
     EXPECT_TRUE(result.converged);
     EXPECT_LT(result.f_val, 1e-8);
-    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-6);
-    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-6);
-    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-6);
-    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-6);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-8);
 }
 
-// Newton's modified Cholesky handles singular hessian (diag(2, 0)) and steps directly along x1.
+// Verifies that Newton's modified Cholesky handles singular Hessian (diag(2, 0)) and steps directly
+// along x1.
 TEST(NewtonIntegration, SingularHessian) {
     RankDeficientQuad f; // f(x1, x2) = x1^2
     Eigen::VectorXd x0(2);
@@ -116,7 +120,8 @@ TEST(NewtonIntegration, SingularHessian) {
     Newton optimizer;
     OptimizationResult result = optimizer.optimize(f, x0);
 
+    EXPECT_TRUE(result.converged);
     EXPECT_LT(result.f_val, 1e-8);
     EXPECT_NEAR(result.x_opt(0), 0.0, 1e-8);
-    EXPECT_EQ(result.x_opt(1), 1.0);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
 }
