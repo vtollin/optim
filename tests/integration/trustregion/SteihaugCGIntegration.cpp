@@ -18,10 +18,9 @@ struct TestObserver : public IterationObserver {
     void onIteration(const IterationInfo &info) override { iters.push_back(info); }
 };
 
-// f is an exact quadratic so the full Newton step lands on the global minimizer in one iteration.
-// The step (||p|| = ||x0|| = 0.5) fits in the initial trust region, so the subproblem returns
-// INTERIOR.
-TEST(SteihaugCGIntegration, ExactSolveInterior) {
+// Ensures that SteihaugCG takes the full Newton step on a convex quadratic when the radius is large
+// enough. The subproblem status on the only iteration is INTERIOR.
+TEST(SteihaugCGIntegration, InteriorStep) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << 0.3, -0.4;
@@ -38,9 +37,9 @@ TEST(SteihaugCGIntegration, ExactSolveInterior) {
     EXPECT_EQ(obs.iters[0].status, SubproblemStatus::INTERIOR);
 }
 
-// Curvature along the first CG direction is positive, but a tiny delta_init means the unconstrained
-// CG step overshoots the region, hitting the "step leaves the trust region" boundary check rather
-// than the negative-curvature check. The truncated step still points straight down -grad.
+// Validates the boundary-overshoot branch. Curvature along the first CG direction is positive, but
+// a tiny delta_init means the unconstrained CG step overshoots the region. The truncated step still
+// points along -grad.
 TEST(SteihaugCGIntegration, BoundaryOvershoot) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -65,10 +64,10 @@ TEST(SteihaugCGIntegration, BoundaryOvershoot) {
     EXPECT_NEAR(cos_theta, -1.0, 1e-10);
 }
 
-// Saddle's Hessian diag(2,-2) is constant and indefinite. From (1,3), d^T*B*d = 8*(1-9) = -64 < 0
-// on the very first CG iteration, so non-positive curvature is detected immediately and the
-// subproblem returns NEGATIVECURVATURE.
-TEST(SteihaugCGIntegration, NegativeCurvatureSaddle) {
+// Validates nonpositive-curvature branch. Saddle's Hessian diag(2,-2) is constant and indefinite.
+// From (1,3), d^T*B*d = 8*(1-9) = -64 < 0 on the very first CG iteration, so nonpositive curvature
+// is detected immediately and the subproblem returns NEGATIVECURVATURE.
+TEST(SteihaugCGIntegration, NegativeCurvature) {
     Saddle f;
     Eigen::VectorXd x0(2);
     x0 << 1.0, 3.0;
@@ -82,9 +81,8 @@ TEST(SteihaugCGIntegration, NegativeCurvatureSaddle) {
     EXPECT_NEAR(obs.iters[0].step.norm(), obs.iters[0].delta, 1e-10);
 }
 
-// Full nonconvex run: Rosenbrock's Hessian is indefinite away from the solution, so the
-// negative-curvature path engages at least once. The optimizer still converges despite relying
-// only on truncated CG.
+// Exercises SteihaugCG on full Rosenbrock run. Rosenbrock's Hessian is indefinite far from the
+// solution, so the nonpositive-curvature path engages at least once.
 TEST(SteihaugCGIntegration, RosenbrockConvergence) {
     Rosenbrock f;
     Eigen::VectorXd x0(2);
@@ -97,15 +95,16 @@ TEST(SteihaugCGIntegration, RosenbrockConvergence) {
 
     EXPECT_TRUE(result.converged);
     EXPECT_LT(result.f_val, 1e-8);
-    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-6);
-    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-6);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
     EXPECT_LE(result.iterations, 45);
+
     EXPECT_TRUE(std::any_of(obs.iters.begin(), obs.iters.end(), [](const IterationInfo &u) {
         return u.status == SubproblemStatus::NEGATIVECURVATURE;
     }));
 }
 
-// Higher-dimensional (4D) nonconvex problem: verifies truncated CG generalizes past the 2D case.
+// Validates SteihaugCG on higher-dimensional (4D) problem.
 TEST(SteihaugCGIntegration, WoodHigherDim) {
     Wood f;
     Eigen::VectorXd x0(4);
@@ -116,8 +115,8 @@ TEST(SteihaugCGIntegration, WoodHigherDim) {
 
     EXPECT_TRUE(result.converged);
     EXPECT_LT(result.f_val, 1e-8);
-    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-4);
-    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-4);
-    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-4);
-    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-4);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-8);
 }
