@@ -88,11 +88,10 @@ TEST(MoreSorensenIntegration, IllCondBoundaryThenConverge) {
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
-    EXPECT_NEAR(result.x_opt(0), 0.0, 1e-6);
-    EXPECT_NEAR(result.x_opt(1), 0.0, 1e-6);
-    EXPECT_TRUE(std::any_of(obs.iters.begin(), obs.iters.end(), [](const IterationInfo &u) {
-        return u.status == SubproblemStatus::BOUNDARY;
-    }));
+    EXPECT_NEAR(result.x_opt(0), 0.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
+
+    EXPECT_EQ(obs.iters[0].status, SubproblemStatus::BOUNDARY);
 }
 
 // Full nonconvex run on Rosenbrock.
