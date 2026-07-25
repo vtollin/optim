@@ -11,7 +11,7 @@ class TwiceDifferentiableFunction;
 namespace optim::trustregion {
 class MoreSorensen : public TrustRegionBase {
   public:
-    MoreSorensen(int max_iterations, optim::ConvergenceCriteria criteria = {},
+    MoreSorensen(int max_iteration = 100, optim::ConvergenceCriteria criteria = {},
                  TrustRegionConfig config = {});
     ~MoreSorensen();
 
