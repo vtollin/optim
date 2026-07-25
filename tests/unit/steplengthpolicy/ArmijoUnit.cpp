@@ -8,8 +8,8 @@
 
 using namespace optim::linesearch;
 
-// ArmijoBacktracking returns the correct step in 2D quadratic.
-TEST(ArmijoUnit, SimpleConvexQuad) {
+// Verifies that ArmijoBacktracking returns the correct step on convex quadratic.
+TEST(ArmijoUnit, ConvexQuad) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << 3.0, 4.0;
@@ -18,7 +18,6 @@ TEST(ArmijoUnit, SimpleConvexQuad) {
 
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
-
     StepResult res = ls.computeStep(f, x0, dir, grad);
     double alpha = res.alpha;
     StepStatus status = res.status;
@@ -33,7 +32,8 @@ TEST(ArmijoUnit, SimpleConvexQuad) {
     EXPECT_EQ(status, StepStatus::SUCCESS);
 }
 
-// ArmijoBacktracking correctly backtracks from initial overshoot (alpha_init = 100.0).
+// Verifies that ArmijoBacktracking backtracks from forced initial overshoot (alpha_init =
+// 100.0) and returns a valid step.
 TEST(ArmijoUnit, ForcedOvershoot) {
     Quadratic1D f;
     Eigen::VectorXd x0(1);
@@ -45,7 +45,6 @@ TEST(ArmijoUnit, ForcedOvershoot) {
 
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
-
     StepResult res = ls.computeStep(f, x0, dir, grad);
     double alpha = res.alpha;
     StepStatus status = res.status;
@@ -59,8 +58,8 @@ TEST(ArmijoUnit, ForcedOvershoot) {
     EXPECT_EQ(status, StepStatus::SUCCESS);
 }
 
-// ArmijoBacktracking returns StepStatus::INADEQUATE when step satisfying sufficient decrease can
-// not be found.
+// Verifies that ArmijoBacktracking returns StepStatus::INADEQUATE when step satisfying sufficient
+// decrease can not be found.
 TEST(ArmijoUnit, InadequateStepReturn) {
     Quadratic1D f;
     Eigen::VectorXd x0(1);
@@ -74,7 +73,6 @@ TEST(ArmijoUnit, InadequateStepReturn) {
 
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
-
     StepResult res = ls.computeStep(f, x0, dir, grad);
     double alpha = res.alpha;
     StepStatus status = res.status;
@@ -88,7 +86,7 @@ TEST(ArmijoUnit, InadequateStepReturn) {
     EXPECT_EQ(status, StepStatus::INADEQUATE);
 }
 
-// ArmijoBacktracking throws a std::runtime_error when passed a non-descent direction.
+// Ensures that ArmijoBacktracking throws a std::runtime_error when passed a non-descent direction.
 TEST(ArmijoUnit, NonDescent) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -100,8 +98,8 @@ TEST(ArmijoUnit, NonDescent) {
     EXPECT_THROW(ls.computeStep(f, x0, grad, grad), std::invalid_argument);
 }
 
-// ArmijoBacktracking returns StepResult{0.0, StepStatus::FAILURE} when alpha_init already below
-// alpha_min.
+// Ensures that ArmijoBacktracking returns StepResult{0.0, StepStatus::FAILURE} when alpha_init is
+// already below alpha_min.
 TEST(ArmijoUnit, InitialFailure) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -113,6 +111,7 @@ TEST(ArmijoUnit, InitialFailure) {
 
     Eigen::VectorXd grad = f.gradient(x0);
     StepResult res = ls.computeStep(f, x0, -grad, grad);
+
     EXPECT_EQ(res.alpha, 0.0);
     EXPECT_EQ(res.status, StepStatus::FAILURE);
 }

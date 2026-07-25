@@ -11,7 +11,7 @@
 
 using namespace optim::linesearch;
 
-// StrongWolfe returns the correct step in simple quadratic case.
+// Verifies that StrongWolfe returns the correct step on convex quadratic.
 TEST(StrongWolfeUnit, SimpleConvexQuad) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -21,7 +21,6 @@ TEST(StrongWolfeUnit, SimpleConvexQuad) {
 
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
-
     StepResult res = ls.computeStep(f, x0, dir, grad);
     double alpha = res.alpha;
     StepStatus status = res.status;
@@ -39,8 +38,8 @@ TEST(StrongWolfeUnit, SimpleConvexQuad) {
     EXPECT_EQ(status, StepStatus::SUCCESS);
 }
 
-// StrongWolfe calls zoom() when step does not satisfy sufficient decrease, and finds a valid
-// step.
+// Verifies that StrongWolfe calls zoom() when a trial step does not satisfy sufficient decrease and
+// finds a valid step.
 TEST(StrongWolfeUnit, FirstZoomCall) {
     IllCondQuad f;
     Eigen::VectorXd x0(2);
@@ -50,7 +49,6 @@ TEST(StrongWolfeUnit, FirstZoomCall) {
 
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
-
     StepResult res = ls.computeStep(f, x0, dir, grad);
     double alpha = res.alpha;
     StepStatus status = res.status;
@@ -67,17 +65,13 @@ TEST(StrongWolfeUnit, FirstZoomCall) {
     EXPECT_EQ(status, StepStatus::SUCCESS);
 }
 
-// StrongWolfe calls zoom() when step satisfies sufficient decrease but not curvature, and
-// finds a valid step.
+// Verifies that StrongWolfe calls zoom() when a trial step satisfies sufficient decrease but not
+// curvature, and finds a valid step.
 TEST(StrongWolfeUnit, SecondZoomCall) {
     Quad10 f;
     Eigen::VectorXd x0(1);
     x0 << 1.0;
 
-    Eigen::VectorXd grad = f.gradient(x0); // = 20
-    Eigen::VectorXd dir = -grad;           // = -20
-
-    // configure Wolfe
     WolfeConfig cfg;
     cfg.alpha_init = 0.0999; // between 0.05 and ~0.1
     cfg.rho = 2.0;
@@ -85,6 +79,8 @@ TEST(StrongWolfeUnit, SecondZoomCall) {
     cfg.c2 = 0.9;
     StrongWolfe ls(cfg);
 
+    Eigen::VectorXd grad = f.gradient(x0);
+    Eigen::VectorXd dir = -grad;
     // satisfies armijo but not curvature, calls second zoom
     bool armijo = f.evaluate(x0 + cfg.alpha_init * dir) <=
                   f.evaluate(x0) + cfg.c1 * cfg.alpha_init * dir.dot(grad);
@@ -110,10 +106,11 @@ TEST(StrongWolfeUnit, SecondZoomCall) {
     EXPECT_EQ(status, StepStatus::SUCCESS);
 }
 
-// For Quadratic1D from x0=-2 in the steepest descent direction, the curvature condition
-// requires alpha in [0.05, 0.95]. Capping alpha_max = 0.04 keeps the geometric expansion
-// entirely below that region: Armijo holds at every trial (no zoom is entered), but the
-// curvature condition is never reachable. f strictly decreases at the best step found.
+// Ensures that StrongWolfe returns INADEQUATE when a step satisfying the Strong Wolfe conditions
+// cannot be found. For Quadratic1D from x0=-2 in the steepest-descent direction, the curvature
+// condition requires alpha in [0.05, 0.95]. Setting alpha_max = 0.04 keeps all trial steps entirely
+// below that region. Armijo holds at every trial (no zoom is entered), but the curvature condition
+// is never reachable.
 TEST(StrongWolfeUnit, InadequateStepReturn) {
     Quadratic1D f;
     Eigen::VectorXd x0(1);
@@ -127,14 +124,13 @@ TEST(StrongWolfeUnit, InadequateStepReturn) {
 
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
-
     StepResult res = ls.computeStep(f, x0, dir, grad);
 
     EXPECT_EQ(res.status, StepStatus::INADEQUATE);
     EXPECT_LT(f.evaluate(x0 + res.alpha * dir), f.evaluate(x0));
 }
 
-// std::invalid argument is thrown when a non-descent direction is passed to computeStep().
+// Ensures std::invalid argument is thrown when a non-descent direction is passed to computeStep().
 TEST(StrongWolfeUnit, NonDescent) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -147,10 +143,9 @@ TEST(StrongWolfeUnit, NonDescent) {
     EXPECT_THROW(ls.computeStep(f, x0, grad, grad), std::invalid_argument);
 }
 
-// alpha_init = 1e-20 is so small that all trial points are numerically indistinguishable
-// from x0 in double precision: phi stays constant at phi0 for every evaluation. The stall
-// counter trips and computeStep returns FAILURE with alpha == 0.0.
-TEST(StrongWolfeUnit, FailureTinyAlphaInit) {
+// Verifies that StrongWolfe returns FAILURE on stall. alpha_init = 1e-20 is so small that all trial
+// points are numerically indistinguishable from x0 in double precision, so the stall counter trips.
+TEST(StrongWolfeUnit, StallFailure) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << 3.0, 4.0;
@@ -161,7 +156,6 @@ TEST(StrongWolfeUnit, FailureTinyAlphaInit) {
 
     Eigen::VectorXd grad = f.gradient(x0);
     Eigen::VectorXd dir = -grad;
-
     StepResult res = ls.computeStep(f, x0, dir, grad);
 
     EXPECT_EQ(res.status, StepStatus::FAILURE);
