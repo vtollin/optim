@@ -74,7 +74,7 @@ TEST(MoreSorensenIntegration, ConvexQuad) {
 
 // Verifies that MoreSoresen takes a boundary step when the model function's minimizer is outside of
 // the trust-region.
-TEST(MoreSorensenIntegration, IllCondBoundaryThenConverge) {
+TEST(MoreSorensenIntegration, BoundaryStep) {
     IllCondQuad f;
     Eigen::VectorXd x0(2);
     x0 << -1.0, -1.0;
@@ -82,7 +82,8 @@ TEST(MoreSorensenIntegration, IllCondBoundaryThenConverge) {
     TrustRegionConfig cfg;
     cfg.delta_init = 0.05;
     cfg.delta_max = 100.0;
-    MoreSorensen optimizer(200, {}, cfg);
+
+    MoreSorensen optimizer(100, {}, cfg);
     TestObserver obs;
     optimizer.addObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);
@@ -94,49 +95,51 @@ TEST(MoreSorensenIntegration, IllCondBoundaryThenConverge) {
     EXPECT_EQ(obs.iters[0].status, SubproblemStatus::BOUNDARY);
 }
 
-// Full nonconvex run on Rosenbrock.
-TEST(MoreSorensenIntegration, RosenbrockFunc) {
+// Exercises More-Sorensen on a full nonconvex run on Rosenbrock.
+TEST(MoreSorensenIntegration, RosenbrockValley) {
     Rosenbrock f;
     Eigen::VectorXd x0(2);
     x0 << -1.2, 1.0;
 
-    MoreSorensen optimizer(100, {}, TrustRegionConfig{0.1, 100.0});
+    MoreSorensen optimizer;
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
-    EXPECT_LT(result.f_val, 1e-7);
-    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-6);
-    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-6);
+    EXPECT_LT(result.f_val, 1e-8);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
 }
 
-// Higher-dimensional (4D) nonconvex problem: verifies MoreSorensen's subproblem solve generalizes
-// past the 2D case.
+// Verifies that MoreSorensen's subproblem solver generalizes to a higher-dimensional (4D)
+// nonconvex problem.
 TEST(MoreSorensenIntegration, WoodHigherDim) {
     Wood f;
     Eigen::VectorXd x0(4);
     x0 << -3.0, -1.0, -3.0, -1.0;
 
-    MoreSorensen optimizer(100, {}, TrustRegionConfig{0.1, 100.0});
+    MoreSorensen optimizer;
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
-    EXPECT_LT(result.f_val, 1e-7);
-    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-5);
-    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-5);
-    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-5);
-    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-5);
+    EXPECT_LT(result.f_val, 1e-8);
+    EXPECT_NEAR(result.x_opt(0), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(2), 1.0, 1e-8);
+    EXPECT_NEAR(result.x_opt(3), 1.0, 1e-8);
 }
 
 // Exercises the hard-case branch using the function described above. The particular solution at
-// lambda = lambda1 is the 1D minimizer in x2. The hard case adds tau * z1 the ensure the norm is
-// equal to the trust-region radius.
+// lambda = lambda1 is the 1D minimizer in x2. The hard case adds tau * z1 the ensure that that step
+// lies on the trust-region boundary.
 TEST(MoreSorensenIntegration, HardCaseMultiplicityTwo) {
     HardCaseQuad f;
-    Eigen::VectorXd x0 = Eigen::VectorXd::Zero(3);
+    Eigen::VectorXd x0(3);
+    x0 << 0.0, 0.0, 0.0;
 
     TrustRegionConfig cfg;
     cfg.delta_init = 2.0;
     cfg.delta_max = 100.0;
+
     MoreSorensen optimizer(50, {}, cfg);
     TestObserver obs;
     optimizer.addObserver(&obs);
