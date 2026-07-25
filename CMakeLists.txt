@@ -9,14 +9,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
 
-# Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Find Eigen
 find_package(Eigen3 REQUIRED)
 
-# List library sources
 set(CORE_SOURCES
     src/optimizer/OptimizerBase.cpp
 )
@@ -45,15 +42,13 @@ set(DIAGNOSTIC_SOURCES
 
 add_library(optim STATIC ${CORE_SOURCES} ${TRUSTREGION_SOURCES} ${LINESEARCH_SOURCES} ${DIAGNOSTIC_SOURCES})
 
-# Properly scoped include paths for library
 target_include_directories(optim
     PUBLIC
-        ${PROJECT_SOURCE_DIR}/include      # For library headers
+        ${PROJECT_SOURCE_DIR}/include
     PRIVATE
-        ${PROJECT_SOURCE_DIR}/src         # Optional if needed internally
+        ${PROJECT_SOURCE_DIR}/src
 )
 
-# Link Eigen to library
 target_link_libraries(optim PUBLIC Eigen3::Eigen)
 
 enable_testing()
