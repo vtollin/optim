@@ -48,7 +48,7 @@ class HardCaseQuad : public optim::TwiceDifferentiableFunction {
 // Ensures that MoreSorensen takes the full Newton step to the global minimizer on a convex
 // quadratic when the radius is large enough. The subproblem status on the only iteration is
 // INTERIOR.
-TEST(MoreSorensenIntegration, ConvexQuad) {
+TEST(MoreSorensenIntegration, InteriorStep) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << 3.0, -4.0;

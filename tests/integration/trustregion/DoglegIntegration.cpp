@@ -18,7 +18,7 @@ struct TestObserver : public IterationObserver {
 
 // Verifies that MoreSorensen takes the full Newton step to the global minimizer on a convex
 // quadratic when the radius is large enough.
-TEST(DoglegIntegration, ConvexQuad) {
+TEST(DoglegIntegration, InteriorStep) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << -5.0, 4.0;
