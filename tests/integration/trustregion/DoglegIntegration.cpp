@@ -24,12 +24,16 @@ TEST(DoglegIntegration, ConvexQuad) {
     x0 << -5.0, 4.0;
 
     Dogleg optimizer;
+    TestObserver obs;
+    optimizer.addObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);
 
     EXPECT_TRUE(result.converged);
     EXPECT_NEAR(result.x_opt(0), 0.0, 1e-8);
     EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
     EXPECT_EQ(result.iterations, 1);
+
+    EXPECT_EQ(obs.iters[0].status, SubproblemStatus::INTERIOR);
 }
 
 // Ensures that Dogleg steps along -grad when the unconstrained minimizer along -grad is
