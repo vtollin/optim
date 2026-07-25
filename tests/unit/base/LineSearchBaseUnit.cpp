@@ -8,6 +8,8 @@ using namespace optim::linesearch;
 using namespace optim;
 
 // This suite tests the shared functionality of LineSearchBase through SteepestDescent.
+// SteepestDescent's computeDirection() is trivial as it simply negates the gradient, so
+// LineSearchBase's behavior can be isolated.
 
 // Verifies that line-search optimizers return immediately when x0 has zero gradient.
 TEST(LineSearchBaseUnit, StartAtMinimum) {
