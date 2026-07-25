@@ -16,8 +16,9 @@ struct TestObserver : public IterationObserver {
     void onIteration(const IterationInfo &info) override { iters.push_back(info); }
 };
 
-// Dogleg takes Newton step converges in one iteration for convex quadratic.
-TEST(DoglegIntegration, SimpleQuad) {
+// Verifies that MoreSorensen takes the full Newton step to the global minimizer on a convex
+// quadratic when the radius is large enough.
+TEST(DoglegIntegration, ConvexQuad) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
     x0 << -5.0, 4.0;
@@ -31,8 +32,8 @@ TEST(DoglegIntegration, SimpleQuad) {
     EXPECT_EQ(result.iterations, 1);
 }
 
-// Dogleg takes step along -grad when the unconstrained minimizer along -grad is outside
-// of delta. This is the tau in [0, 1] branch.
+// Ensures that Dogleg steps along -grad when the unconstrained minimizer along -grad is
+// outside of delta. This is the tau in [0, 1] branch.
 TEST(DoglegIntegration, CauchyBranch) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -40,8 +41,9 @@ TEST(DoglegIntegration, CauchyBranch) {
 
     TrustRegionConfig cfg;
     cfg.delta_init = 0.01;
-    TestObserver obs;
+
     Dogleg optimizer(100, {}, cfg);
+    TestObserver obs;
     optimizer.addObserver(&obs);
     OptimizationResult result = optimizer.optimize(f, x0);
 
@@ -55,8 +57,7 @@ TEST(DoglegIntegration, CauchyBranch) {
     EXPECT_NEAR(cos_theta, -1.0, 1e-10);
 }
 
-// From (-50.0, 25.0) on convex quadratic with delta_init set to 1.0, Dogleg converges in 6
-// iterations and the fall back never fires.
+// Verifies that the Cauchy fallback does not fire on a convex problem.
 TEST(DoglegIntegration, NoFallback) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -64,6 +65,7 @@ TEST(DoglegIntegration, NoFallback) {
 
     TrustRegionConfig cfg;
     cfg.delta_init = 1.0;
+
     Dogleg optimizer(100, {}, cfg);
     TestObserver obs;
     optimizer.addObserver(&obs);
@@ -73,13 +75,14 @@ TEST(DoglegIntegration, NoFallback) {
     EXPECT_NEAR(result.x_opt(0), 0.0, 1e-8);
     EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
     EXPECT_LE(result.iterations, 10);
+
     EXPECT_TRUE(std::all_of(obs.iters.begin(), obs.iters.end(), [](const IterationInfo &u) {
         return u.status != SubproblemStatus::NEGATIVECURVATURE;
     }));
 }
 
-// Dogleg converges on Rosenbrock in under 30 iterations, and the Cauchy fall back fires to handle
-// nonconvexity.
+// Validates Dogleg on a full Rosenbrock run. Dogleg converges in under 30 iterations, and the
+// Cauchy fallback fires to handle nonconvexity.
 TEST(DoglegIntegration, FallbackRosenbrock) {
     Rosenbrock f;
     Eigen::VectorXd x0(2);
@@ -95,14 +98,16 @@ TEST(DoglegIntegration, FallbackRosenbrock) {
     EXPECT_NEAR(result.x_opt(0), 1.0, 1e-8);
     EXPECT_NEAR(result.x_opt(1), 1.0, 1e-8);
     EXPECT_LE(result.iterations, 30);
+
     EXPECT_TRUE(std::any_of(obs.iters.begin(), obs.iters.end(), [](const IterationInfo &u) {
         return u.status == SubproblemStatus::NEGATIVECURVATURE;
     }));
 }
 
-// Higher-dimensional (4D) nonconvex problem: verifies Dogleg's subproblem solver generalizes past
-// the 2D case. Dogleg converges in ~3900 iterations, so max_iterations is raised. This is expected,
-// as the indefinite regions of Wood force Dogleg to fall back to the Cauchy step frequently.
+// Higher-dimensional (4D) nonconvex problem: verifies that Dogleg's subproblem solver generalizes
+// past the 2D case. Dogleg converges in ~3900 iterations, so max_iterations is raised. This is
+// expected, as the indefinite regions of Wood force Dogleg to fall back to the Cauchy step
+// frequently.
 TEST(DoglegIntegration, WoodHigherDim) {
     Wood f;
     Eigen::VectorXd x0(4);
