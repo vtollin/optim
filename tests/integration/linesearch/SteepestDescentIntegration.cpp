@@ -11,7 +11,7 @@
 using namespace optim::linesearch;
 using namespace optim;
 
-// Simple, convex problem with ArmijoBacktracking
+// Validates SteepestDescent with Armijo line search on convex quadratic.
 TEST(SteepestDescentIntegration, ConvexQuadArmijo) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -26,7 +26,7 @@ TEST(SteepestDescentIntegration, ConvexQuadArmijo) {
     EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
 }
 
-// Simple, convex problem with StrongWolfe
+// Validates SteepestDescent with Strong Wolfe line search on convex quadratic.
 TEST(SteepestDescentIntegration, ConvexQuadWolfe) {
     ConvexQuadratic f;
     Eigen::VectorXd x0(2);
@@ -41,7 +41,7 @@ TEST(SteepestDescentIntegration, ConvexQuadWolfe) {
     EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
 }
 
-// Target weakness of SD: ill-conditioned quadratic
+// Validates SteepestDescent on ill-conditioned quadratic
 TEST(SteepestDescentIntegration, IllConditionedQuad) {
     IllCondQuad f;
     Eigen::VectorXd x0(2);
@@ -56,9 +56,10 @@ TEST(SteepestDescentIntegration, IllConditionedQuad) {
     EXPECT_NEAR(result.x_opt(1), 0.0, 1e-8);
 }
 
-// Target weakness of SD: begin in Rosenbrock valley, which has ill-conditioned curvature.
-// Tolerances are loosened to 5e-3 and max iterations is increased to 4000. This is
-// characteristic SD weakness.
+// Stresses SteepestDescent on Rosenbrock function. Even with max_iterations raised to 4000,
+// SteepestDescent can not acheive gradient convergence within the default tolerance of 1e-8. This
+// behavior is expected, as SteepestDescent performs poorly on ill-conditioned problems like
+// Rosenbrock.
 TEST(SteepestDescentIntegration, RosenbrockValley) {
     Rosenbrock f;
     Eigen::Vector2d x0;
@@ -67,6 +68,7 @@ TEST(SteepestDescentIntegration, RosenbrockValley) {
     SteepestDescent optimizer(StepLengthMethod::ARMIJO, 4000);
     OptimizationResult result = optimizer.optimize(f, x0);
 
+    EXPECT_FALSE(result.converged);
     EXPECT_NEAR(result.f_val, 0.0, 1e-5);
     EXPECT_NEAR(result.x_opt(0), 1.0, 5e-3);
     EXPECT_NEAR(result.x_opt(1), 1.0, 5e-3);
