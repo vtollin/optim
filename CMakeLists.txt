@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 project(optim)
 
 
-if (PROJECT_IS_TOP_LEVEL)
+if(PROJECT_IS_TOP_LEVEL)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
@@ -52,5 +52,9 @@ target_include_directories(optim
 
 target_link_libraries(optim PUBLIC Eigen3::Eigen)
 
+option(OPTIM_BUILD_TESTS "Build optim tests" ${PROJECT_IS_TOP_LEVEL})
+
+if(OPTIM_BUILD_TESTS)
 enable_testing()
 add_subdirectory(tests)
+endif()
