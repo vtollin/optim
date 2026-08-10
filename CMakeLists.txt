@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(optim)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
@@ -41,6 +39,8 @@ set(DIAGNOSTIC_SOURCES
 )
 
 add_library(optim STATIC ${CORE_SOURCES} ${TRUSTREGION_SOURCES} ${LINESEARCH_SOURCES} ${DIAGNOSTIC_SOURCES})
+
+target_compile_features(optim PUBLIC cxx_std_17)
 
 target_include_directories(optim
     PUBLIC
