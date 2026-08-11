@@ -58,6 +58,7 @@ target_include_directories(optim_test_functions INTERFACE ${PROJECT_SOURCE_DIR}/
 
 option(OPTIM_BUILD_TESTS "Build optim tests" ${PROJECT_IS_TOP_LEVEL})
 option(OPTIM_BUILD_TOOLS "Build optim tools" ${PROJECT_IS_TOP_LEVEL})
+option(OPTIM_BUILD_BENCH "Build optim benchmarks" OFF)
 
 if(OPTIM_BUILD_TESTS)
 enable_testing()
@@ -66,4 +67,8 @@ endif()
 
 if(OPTIM_BUILD_TOOLS)
 add_subdirectory(tools)
+endif()
+
+if(OPTIM_BUILD_BENCH)
+add_subdirectory(bench)
 endif()
