@@ -15,6 +15,7 @@ add_executable(optim_tests
     unit/steplengthpolicy/ArmijoUnit.cpp
     unit/steplengthpolicy/StrongWolfeUnit.cpp
     unit/functions/RosenbrockUnit.cpp
+    unit/functions/GeneralizedRosenbrockUnit.cpp
     unit/functions/HimmelblauUnit.cpp
     unit/functions/WoodUnit.cpp
     unit/base/LineSearchBaseUnit.cpp
