@@ -57,8 +57,13 @@ add_library(optim_test_functions INTERFACE)
 target_include_directories(optim_test_functions INTERFACE ${PROJECT_SOURCE_DIR}/test_functions)
 
 option(OPTIM_BUILD_TESTS "Build optim tests" ${PROJECT_IS_TOP_LEVEL})
+option(OPTIM_BUILD_TOOLS "Build optim tools" ${PROJECT_IS_TOP_LEVEL})
 
 if(OPTIM_BUILD_TESTS)
 enable_testing()
 add_subdirectory(tests)
+endif()
+
+if(OPTIM_BUILD_TOOLS)
+add_subdirectory(tools)
 endif()

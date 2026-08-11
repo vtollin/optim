@@ -1,0 +1,2 @@
+add_executable(verify_validation verify_validation.cpp)
+target_link_libraries(verify_validation PRIVATE optim optim_test_functions)
