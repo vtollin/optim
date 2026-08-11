@@ -27,13 +27,7 @@ add_executable(optim_tests
     integration/trustregion/SteihaugCGIntegration.cpp
 )
 
-target_include_directories(optim_tests PRIVATE ${PROJECT_SOURCE_DIR}/test_functions)
-
-target_link_libraries(optim_tests
-    PRIVATE
-        optim
-        gtest_main
-)
+target_link_libraries(optim_tests PRIVATE optim optim_test_functions gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(optim_tests)

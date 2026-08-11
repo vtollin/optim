@@ -53,6 +53,9 @@ target_include_directories(optim
 
 target_link_libraries(optim PUBLIC Eigen3::Eigen)
 
+add_library(optim_test_functions INTERFACE)
+target_include_directories(optim_test_functions INTERFACE ${PROJECT_SOURCE_DIR}/test_functions)
+
 option(OPTIM_BUILD_TESTS "Build optim tests" ${PROJECT_IS_TOP_LEVEL})
 
 if(OPTIM_BUILD_TESTS)
