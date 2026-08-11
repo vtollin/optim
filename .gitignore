@@ -15,6 +15,7 @@ Makefile
 
 # Build directory
 /build/
+/build-rel/
 
 # Generated project files
 *.log
